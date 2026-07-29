@@ -11,6 +11,16 @@
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
   <!-- Babel for JSX -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    /* Smooth scrolling and hidden scrollbars for clean UI */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
 </head>
 <body class="bg-[#0a0f1d] text-white min-h-screen">
   <div id="root"></div>
@@ -27,9 +37,12 @@
         contact: "+960 777-1234",
         fare: "MVR 250",
         schedule: [
-          { id: "r1", time: "09:15 AM", time24: "09:15", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
-          { id: "r2", time: "02:30 PM", time24: "14:30", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
-          { id: "r3", time: "05:30 PM", time24: "17:30", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "r1", time: "06:30 AM", time24: "06:30", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "r2", time: "09:15 AM", time24: "09:15", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "r3", time: "11:30 AM", time24: "11:30", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "r4", time: "02:30 PM", time24: "14:30", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+          { id: "r5", time: "05:30 PM", time24: "17:30", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "r6", time: "08:30 PM", time24: "20:30", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
         ],
       },
       {
@@ -39,9 +52,11 @@
         contact: "+960 777-5678",
         fare: "MVR 250",
         schedule: [
-          { id: "t1", time: "09:15 AM", time24: "09:15", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
-          { id: "t2", time: "12:15 PM", time24: "12:15", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
-          { id: "t3", time: "04:30 PM", time24: "16:30", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+          { id: "t1", time: "07:00 AM", time24: "07:00", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "t2", time: "09:15 AM", time24: "09:15", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "t3", time: "12:15 PM", time24: "12:15", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "t4", time: "04:00 PM", time24: "16:00", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "t5", time: "06:30 PM", time24: "18:30", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
         ],
       },
       {
@@ -51,14 +66,17 @@
         contact: "+960 777-9999",
         fare: "MVR 300",
         schedule: [
-          { id: "rv1", time: "09:20 AM", time24: "09:20", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
-          { id: "rv2", time: "04:20 PM", time24: "16:20", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
-          { id: "rv3", time: "08:00 PM", time24: "20:00", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+          { id: "rv1", time: "08:00 AM", time24: "08:00", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "rv2", time: "09:20 AM", time24: "09:20", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "rv3", time: "02:00 PM", time24: "14:00", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "rv4", time: "04:20 PM", time24: "16:20", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "rv5", time: "07:00 PM", time24: "19:00", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "rv6", time: "09:30 PM", time24: "21:30", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
         ],
       },
     ];
 
-    // Helper: Compare 24h time against live clock minutes
+    // Helper to calculate ferry departure status based on real-time clock
     const getDepartureStatus = (time24, nextFerryTracker) => {
       const now = new Date();
       const currentMinutes = now.getHours() * 60 + now.getMinutes();
@@ -67,12 +85,12 @@
       const itemMinutes = hours * 60 + minutes;
 
       if (itemMinutes < currentMinutes) {
-        return { status: 'Departed', style: 'bg-slate-800/60 text-slate-500 border-slate-700/50' };
+        return { status: 'Departed', isDeparted: true, style: 'bg-slate-800/60 text-slate-500 border-slate-700/50' };
       } else if (!nextFerryTracker.found) {
         nextFerryTracker.found = true;
-        return { status: 'Next Ferry', style: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 animate-pulse font-bold' };
+        return { status: 'Next Ferry', isDeparted: false, style: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 animate-pulse font-bold' };
       } else {
-        return { status: 'Upcoming', style: 'bg-blue-500/20 text-blue-400 border-blue-500/40' };
+        return { status: 'Upcoming', isDeparted: false, style: 'bg-blue-500/20 text-blue-400 border-blue-500/40' };
       }
     };
 
@@ -86,7 +104,6 @@
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
           <div className="relative w-full max-w-md max-h-[85vh] flex flex-col bg-[#131d35] rounded-3xl border border-slate-700/60 shadow-2xl overflow-hidden text-white">
             
-            {/* Modal Header */}
             <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-[#0f172a]">
               <div>
                 <div className="flex items-center gap-2">
@@ -105,7 +122,6 @@
               </button>
             </div>
 
-            {/* Timetable Body */}
             <div className="p-5 overflow-y-auto space-y-3">
               <div className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
                 Full Operator Timetable
@@ -130,7 +146,6 @@
               </div>
             </div>
 
-            {/* Modal Footer */}
             <div className="p-4 bg-[#0f172a] border-t border-slate-800 flex items-center justify-between">
               <span className="text-xs text-slate-400">
                 Contact: <strong className="text-slate-200">{operator.contact}</strong>
@@ -154,9 +169,10 @@
     function App() {
       const [selectedOperator, setSelectedOperator] = React.useState(null);
       const [activeRoute, setActiveRoute] = React.useState('MALE_TO_THULUSDHOO');
-      const [recenterKey, setRecenterKey] = React.useState(0);
+      const rollerRef = React.useRef(null);
+      const nextFerryRef = React.useRef(null);
 
-      // Collect all individual trips into a single master schedule array
+      // 1. Gather all trips for selected route, sorted chronologically
       const allTrips = React.useMemo(() => {
         let trips = [];
         FERRY_OPERATORS.forEach((operator) => {
@@ -168,15 +184,41 @@
           });
         });
 
-        // Filter by currently selected route direction
         const filtered = trips.filter((t) => t.route === activeRoute);
-
-        // Sort chronologically by 24h time string ("09:15", "14:30", etc.)
         return filtered.sort((a, b) => a.time24.localeCompare(b.time24));
       }, [activeRoute]);
 
-      // Tracker object passed to status calculation to mark only ONE "Next Ferry"
+      // 2. Separate into Departed vs Upcoming lists
       const nextFerryTracker = { found: false };
+      const processedTrips = allTrips.map((item) => {
+        const { status, isDeparted, style } = getDepartureStatus(item.time24, nextFerryTracker);
+        return { ...item, status, isDeparted, style };
+      });
+
+      const departedTrips = processedTrips.filter((t) => t.isDeparted);
+      const upcomingTrips = processedTrips.filter((t) => !t.isDeparted);
+
+      // Limit display to 3 departed ferries + 5 upcoming ferries for the roller window
+      const visibleDeparted = departedTrips.slice(-3);
+      const visibleUpcoming = upcomingTrips.slice(0, 5);
+      const rollerList = [...visibleDeparted, ...visibleUpcoming];
+
+      // Function to auto-scroll/recenter onto the Next Ferry row
+      const handleRecenter = () => {
+        if (nextFerryRef.current) {
+          nextFerryRef.current.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+          });
+        } else if (rollerRef.current) {
+          rollerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      };
+
+      // Auto recenter on initial load and route changes
+      React.useEffect(() => {
+        setTimeout(() => handleRecenter(), 100);
+      }, [activeRoute]);
 
       return (
         <div className="min-h-screen bg-[#0a0f1d] text-white flex justify-center p-4 sm:p-6 font-sans">
@@ -218,15 +260,19 @@
                 Next Available Ferry
               </div>
               <div>
-                <h3 className="text-[#00a3e0] font-semibold text-lg">River Speed</h3>
-                <div className="text-5xl font-black tracking-tight text-white my-1">4:20 PM</div>
+                <h3 className="text-[#00a3e0] font-semibold text-lg">
+                  {upcomingTrips[0]?.operatorName || "River Speed"}
+                </h3>
+                <div className="text-5xl font-black tracking-tight text-white my-1">
+                  {upcomingTrips[0]?.time || "4:20 PM"}
+                </div>
               </div>
               <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold">
-                Departs in 7 mins
+                Departs Soon
               </div>
             </div>
 
-            {/* CLICKABLE FERRY OPERATORS */}
+            {/* Ferry Operators */}
             <div className="space-y-3">
               <div className="flex items-center justify-between text-xs font-bold tracking-wider text-slate-400 uppercase">
                 <span>Ferry Operators</span>
@@ -251,48 +297,54 @@
               </div>
             </div>
 
-            {/* DYNAMIC SCHEDULE ROLLER */}
+            {/* ROLLING SCHEDULE ROLLER */}
             <div className="space-y-3">
               <div className="flex items-center justify-between text-xs font-bold tracking-wider text-slate-400 uppercase">
                 <span>Schedule Roller</span>
                 <button
-                  onClick={() => setRecenterKey((prev) => prev + 1)}
-                  className="text-[#00a3e0] hover:underline text-xs font-semibold"
+                  onClick={handleRecenter}
+                  className="text-[#00a3e0] hover:underline text-xs font-semibold tracking-wider"
                 >
                   RECENTER
                 </button>
               </div>
 
-              {/* Scrollable Container */}
+              {/* Scroll Window (Shows 3 Departed + 5 Scheduled) */}
               <div
-                key={recenterKey}
-                className="space-y-2.5 max-h-[280px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-slate-700"
+                ref={rollerRef}
+                className="space-y-2.5 max-h-[310px] overflow-y-auto no-scrollbar rounded-2xl p-1 bg-[#0a0f1d]/50"
               >
-                {allTrips.length > 0 ? (
-                  allTrips.map((item) => {
-                    const { status, style } = getDepartureStatus(item.time24, nextFerryTracker);
-                    const isDeparted = status === 'Departed';
+                {rollerList.length > 0 ? (
+                  rollerList.map((item) => {
+                    const isNext = item.status === 'Next Ferry';
 
                     return (
                       <div
                         key={item.id}
-                        className={`flex items-center justify-between p-4 bg-[#131d35]/60 border border-slate-800/60 rounded-2xl transition-all ${
-                          isDeparted ? 'opacity-50' : 'opacity-100 bg-[#131d35]'
+                        ref={isNext ? nextFerryRef : null}
+                        className={`flex items-center justify-between p-4 border rounded-2xl transition-all ${
+                          item.isDeparted
+                            ? 'bg-[#131d35]/40 border-slate-800/40 opacity-50'
+                            : isNext
+                            ? 'bg-[#131d35] border-[#00a3e0]/60 shadow-lg shadow-cyan-500/10 scale-[1.01]'
+                            : 'bg-[#131d35] border-slate-800'
                         }`}
                       >
                         <div>
-                          <div className="text-base font-bold text-slate-200">{item.time}</div>
+                          <div className={`text-base font-bold ${item.isDeparted ? 'text-slate-400' : 'text-slate-100'}`}>
+                            {item.time}
+                          </div>
                           <div className="text-xs text-slate-400">{item.operatorName}</div>
                         </div>
-                        <span className={`px-3 py-1 text-[11px] font-semibold rounded-lg border ${style}`}>
-                          {status}
+                        <span className={`px-3 py-1 text-[11px] font-semibold rounded-lg border ${item.style}`}>
+                          {item.status}
                         </span>
                       </div>
                     );
                   })
                 ) : (
                   <div className="text-center text-xs text-slate-500 py-6">
-                    No scheduled ferries for this route direction.
+                    No scheduled ferries found.
                   </div>
                 )}
               </div>
