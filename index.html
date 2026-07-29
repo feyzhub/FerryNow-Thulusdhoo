@@ -29,7 +29,9 @@
       --subtext: #94a3b8;
       --accent: #34d399;
       --accent-glow: rgba(52, 211, 153, 0.15);
-      --past-opacity: 0.35;
+      --past-opacity: 0.4;
+      --item-height: 64px;
+      --item-gap: 10px;
     }
 
     * {
@@ -59,11 +61,11 @@
 
     header {
       text-align: center;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
     }
 
     h1 {
-      margin: 0 0 6px 0;
+      margin: 0 0 4px 0;
       font-size: 1.4rem;
       font-weight: 800;
       letter-spacing: -0.02em;
@@ -77,7 +79,6 @@
       margin: 0;
       font-size: 0.85rem;
       font-weight: 500;
-      letter-spacing: 0.01em;
     }
 
     .route-selector {
@@ -113,11 +114,11 @@
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       border-radius: 24px;
-      padding: 24px 20px;
+      padding: 20px 20px;
       text-align: center;
       backdrop-filter: blur(16px);
       box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
-      margin-bottom: 28px;
+      margin-bottom: 24px;
       position: relative;
       overflow: hidden;
     }
@@ -145,63 +146,87 @@
       font-size: 0.72rem;
       font-weight: 700;
       letter-spacing: 0.08em;
-      margin-bottom: 14px;
+      margin-bottom: 10px;
       text-transform: uppercase;
     }
 
     .time-large {
-      font-size: 3.2rem;
+      font-size: 3rem;
       font-weight: 800;
-      margin: 4px 0;
+      margin: 2px 0;
       color: #ffffff;
       letter-spacing: -0.03em;
       text-shadow: 0 0 30px var(--primary-glow);
     }
 
     .operator-name {
-      font-size: 1.15rem;
+      font-size: 1.1rem;
       color: var(--primary);
       font-weight: 600;
-      letter-spacing: -0.01em;
     }
 
     .countdown {
       display: inline-block;
-      font-size: 0.88rem;
+      font-size: 0.85rem;
       color: var(--accent);
       background: var(--accent-glow);
       padding: 6px 14px;
       border-radius: 12px;
-      margin-top: 12px;
+      margin-top: 10px;
       font-weight: 600;
     }
 
     .section-title {
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       font-weight: 700;
       color: var(--subtext);
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
       padding-left: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Roller Viewport Window */
+    .roller-viewport {
+      position: relative;
+      height: calc(8 * var(--item-height) + 7 * var(--item-gap));
+      overflow-y: scroll;
+      scroll-behavior: smooth;
+      border-radius: 20px;
+      border: 1px solid var(--card-border);
+      background: rgba(11, 15, 25, 0.5);
+      backdrop-filter: blur(12px);
+      /* Edge Fade Masks for Roller Effect */
+      mask-image: linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%);
+      scrollbar-width: none;
+    }
+    .roller-viewport::-webkit-scrollbar {
+      display: none;
     }
 
     .schedule-list {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: var(--item-gap);
+      padding: 0;
+      margin: 0;
     }
 
     .schedule-item {
+      height: var(--item-height);
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       border-radius: 16px;
-      padding: 14px 18px;
+      padding: 0 18px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      backdrop-filter: blur(12px);
-      transition: transform 0.2s ease, border-color 0.2s ease;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-sizing: border-border;
     }
 
     .schedule-item.past {
@@ -209,30 +234,41 @@
       filter: grayscale(0.5);
     }
 
+    .schedule-item.next-highlight {
+      border-color: var(--primary);
+      box-shadow: 0 0 15px var(--primary-glow);
+      background: rgba(22, 30, 49, 0.95);
+    }
+
     .item-time {
       font-weight: 700;
-      font-size: 1.15rem;
-      letter-spacing: -0.02em;
+      font-size: 1.1rem;
       color: #ffffff;
     }
 
     .item-op {
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       color: var(--subtext);
       margin-top: 2px;
       font-weight: 500;
     }
 
     .status-pill {
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       font-weight: 600;
       padding: 4px 10px;
       border-radius: 8px;
     }
 
-    .status-pill.scheduled {
-      background: rgba(56, 189, 248, 0.1);
+    .status-pill.next {
+      background: rgba(56, 189, 248, 0.2);
       color: var(--primary);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+    }
+
+    .status-pill.scheduled {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--subtext);
     }
 
     .status-pill.departed {
@@ -261,8 +297,14 @@
     <div class="countdown" id="hero-countdown">Checking schedule...</div>
   </div>
 
-  <div class="section-title">Today's Timetable</div>
-  <div class="schedule-list" id="upcoming-list"></div>
+  <div class="section-title">
+    <span>Schedule Roller</span>
+    <span style="font-size: 0.7rem; color: var(--primary); cursor: pointer;" onclick="scrollToNextFerry()">Recenter</span>
+  </div>
+
+  <div class="roller-viewport" id="roller-viewport">
+    <div class="schedule-list" id="upcoming-list"></div>
+  </div>
 </div>
 
 <script>
@@ -312,6 +354,7 @@
   };
 
   let currentDirection = 'MALE_TO_THULUSDHOO';
+  let nextFerryIndex = -1;
 
   function setDirection(dir) {
     currentDirection = dir;
@@ -344,6 +387,18 @@
     return activeList.sort((a, b) => a.time.localeCompare(b.time));
   }
 
+  function scrollToNextFerry() {
+    if (nextFerryIndex === -1) return;
+    const viewport = document.getElementById('roller-viewport');
+    const targetItem = document.getElementById(`ferry-item-${nextFerryIndex}`);
+    if (targetItem) {
+      // Offset position to keep 3 departed ferries (or items) visible above
+      const itemHeight = 64 + 10; // height + gap
+      const targetScrollTop = Math.max(0, (nextFerryIndex - 3) * itemHeight);
+      viewport.scrollTo({ top: targetScrollTop, behavior: 'smooth' });
+    }
+  }
+
   function updateApp() {
     const now = new Date();
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -356,16 +411,20 @@
 
     let nextFerry = null;
     let upcoming = [];
+    nextFerryIndex = -1;
 
-    schedule.forEach(item => {
+    schedule.forEach((item, index) => {
       const [h, m] = item.time.split(':').map(Number);
       const itemMinutes = h * 60 + m;
 
       if (itemMinutes > currentMinutes) {
-        if (!nextFerry) nextFerry = { ...item, minutesDiff: itemMinutes - currentMinutes };
-        upcoming.push({ ...item, isPast: false });
+        if (!nextFerry) {
+          nextFerry = { ...item, minutesDiff: itemMinutes - currentMinutes };
+          nextFerryIndex = index;
+        }
+        upcoming.push({ ...item, isPast: false, isNext: index === nextFerryIndex });
       } else {
-        upcoming.push({ ...item, isPast: true });
+        upcoming.push({ ...item, isPast: true, isNext: false });
       }
     });
 
@@ -384,25 +443,41 @@
       document.getElementById('hero-op').innerText = "No more ferries today";
       document.getElementById('hero-time').innerText = "Tomorrow";
       document.getElementById('hero-countdown').innerText = "Check back in the morning";
+      nextFerryIndex = schedule.length > 0 ? schedule.length - 1 : 0;
     }
 
     const listContainer = document.getElementById('upcoming-list');
     listContainer.innerHTML = '';
     
-    upcoming.forEach(item => {
+    upcoming.forEach((item, i) => {
       const div = document.createElement('div');
-      div.className = `schedule-item ${item.isPast ? 'past' : ''}`;
+      div.id = `ferry-item-${i}`;
+      div.className = `schedule-item ${item.isPast ? 'past' : ''} ${item.isNext ? 'next-highlight' : ''}`;
+      
+      let badgeClass = 'scheduled';
+      let badgeText = 'Scheduled';
+      if (item.isPast) {
+        badgeClass = 'departed';
+        badgeText = 'Departed';
+      } else if (item.isNext) {
+        badgeClass = 'next';
+        badgeText = 'Next Up';
+      }
+
       div.innerHTML = `
         <div>
           <div class="item-time">${format12hr(item.time)}</div>
           <div class="item-op">${item.operator}</div>
         </div>
-        <div class="status-pill ${item.isPast ? 'departed' : 'scheduled'}">
-          ${item.isPast ? 'Departed' : 'Scheduled'}
+        <div class="status-pill ${badgeClass}">
+          ${badgeText}
         </div>
       `;
       listContainer.appendChild(div);
     });
+
+    // Auto-scroll the roller into position
+    setTimeout(scrollToNextFerry, 100);
   }
 
   function format12hr(timeStr) {
