@@ -1,494 +1,223 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Thulusdhoo Ferry Finder</title>
-
-  <!-- PWA Meta Tags -->
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0b0f19">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="FerryFinder">
-  <link rel="apple-touch-icon" href="icon-192.png">
-
-  <!-- Google Fonts: Inter -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-  <style>
-    :root {
-      --bg: #0b0f19;
-      --card-bg: rgba(22, 30, 49, 0.75);
-      --card-border: rgba(255, 255, 255, 0.08);
-      --primary: #38bdf8;
-      --primary-glow: rgba(56, 189, 248, 0.25);
-      --text: #f8fafc;
-      --subtext: #94a3b8;
-      --accent: #34d399;
-      --accent-glow: rgba(52, 211, 153, 0.15);
-      --past-opacity: 0.4;
-      --item-height: 64px;
-      --item-gap: 10px;
-    }
-
-    * {
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background-color: var(--bg);
-      background-image: 
-        radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.12), transparent 40%),
-        radial-gradient(circle at 100% 100%, rgba(52, 211, 153, 0.08), transparent 40%);
-      color: var(--text);
-      margin: 0;
-      padding: 24px 16px;
-      display: flex;
-      justify-content: center;
-      min-height: 100vh;
-      user-select: none;
-    }
-
-    .container {
-      width: 100%;
-      max-width: 440px;
-    }
-
-    header {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    h1 {
-      margin: 0 0 4px 0;
-      font-size: 1.4rem;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-      background: linear-gradient(135deg, #ffffff 30%, var(--subtext));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    p.subtitle {
-      color: var(--subtext);
-      margin: 0;
-      font-size: 0.85rem;
-      font-weight: 500;
-    }
-
-    .route-selector {
-      display: flex;
-      background: rgba(15, 23, 42, 0.8);
-      padding: 4px;
-      border-radius: 14px;
-      border: 1px solid var(--card-border);
-      margin-bottom: 20px;
-      backdrop-filter: blur(12px);
-    }
-
-    .route-btn {
-      flex: 1;
-      padding: 12px 10px;
-      border: none;
-      background: transparent;
-      color: var(--subtext);
-      border-radius: 10px;
-      font-weight: 600;
-      font-size: 0.88rem;
-      cursor: pointer;
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .route-btn.active {
-      background: linear-gradient(135deg, #38bdf8, #0284c7);
-      color: #0f172a;
-      box-shadow: 0 4px 15px var(--primary-glow);
-    }
-
-    .hero-card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 24px;
-      padding: 20px 20px;
-      text-align: center;
-      backdrop-filter: blur(16px);
-      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
-      margin-bottom: 24px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .hero-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 60%;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--primary), transparent);
-    }
-
-    .hero-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: rgba(56, 189, 248, 0.12);
-      border: 1px solid rgba(56, 189, 248, 0.3);
-      color: var(--primary);
-      padding: 4px 14px;
-      border-radius: 20px;
-      font-size: 0.72rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      margin-bottom: 10px;
-      text-transform: uppercase;
-    }
-
-    .time-large {
-      font-size: 3rem;
-      font-weight: 800;
-      margin: 2px 0;
-      color: #ffffff;
-      letter-spacing: -0.03em;
-      text-shadow: 0 0 30px var(--primary-glow);
-    }
-
-    .operator-name {
-      font-size: 1.1rem;
-      color: var(--primary);
-      font-weight: 600;
-    }
-
-    .countdown {
-      display: inline-block;
-      font-size: 0.85rem;
-      color: var(--accent);
-      background: var(--accent-glow);
-      padding: 6px 14px;
-      border-radius: 12px;
-      margin-top: 10px;
-      font-weight: 600;
-    }
-
-    .section-title {
-      font-size: 0.82rem;
-      font-weight: 700;
-      color: var(--subtext);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-bottom: 12px;
-      padding-left: 4px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    /* Roller Viewport Window */
-    .roller-viewport {
-      position: relative;
-      height: calc(8 * var(--item-height) + 7 * var(--item-gap));
-      overflow-y: scroll;
-      scroll-behavior: smooth;
-      border-radius: 20px;
-      border: 1px solid var(--card-border);
-      background: rgba(11, 15, 25, 0.5);
-      backdrop-filter: blur(12px);
-      /* Edge Fade Masks for Roller Effect */
-      mask-image: linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%);
-      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%);
-      scrollbar-width: none;
-    }
-    .roller-viewport::-webkit-scrollbar {
-      display: none;
-    }
-
-    .schedule-list {
-      display: flex;
-      flex-direction: column;
-      gap: var(--item-gap);
-      padding: 0;
-      margin: 0;
-    }
-
-    .schedule-item {
-      height: var(--item-height);
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 16px;
-      padding: 0 18px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      box-sizing: border-border;
-    }
-
-    .schedule-item.past {
-      opacity: var(--past-opacity);
-      filter: grayscale(0.5);
-    }
-
-    .schedule-item.next-highlight {
-      border-color: var(--primary);
-      box-shadow: 0 0 15px var(--primary-glow);
-      background: rgba(22, 30, 49, 0.95);
-    }
-
-    .item-time {
-      font-weight: 700;
-      font-size: 1.1rem;
-      color: #ffffff;
-    }
-
-    .item-op {
-      font-size: 0.8rem;
-      color: var(--subtext);
-      margin-top: 2px;
-      font-weight: 500;
-    }
-
-    .status-pill {
-      font-size: 0.72rem;
-      font-weight: 600;
-      padding: 4px 10px;
-      border-radius: 8px;
-    }
-
-    .status-pill.next {
-      background: rgba(56, 189, 248, 0.2);
-      color: var(--primary);
-      border: 1px solid rgba(56, 189, 248, 0.4);
-    }
-
-    .status-pill.scheduled {
-      background: rgba(255, 255, 255, 0.05);
-      color: var(--subtext);
-    }
-
-    .status-pill.departed {
-      background: rgba(148, 163, 184, 0.1);
-      color: var(--subtext);
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ferry Operator Schedules</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- React & React DOM CDNs -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <!-- Babel CDN for inline JSX execution -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
-<body>
+<body class="bg-slate-50 min-h-screen">
+  <div id="root"></div>
 
-<div class="container">
-  <header>
-    <h1>Thulusdhoo Ferry Finder</h1>
-    <p class="subtitle" id="current-day-time">Loading time...</p>
-  </header>
+  <script type="text/babel">
+    // ==========================================
+    // 1. DATA LAYER (ferrySchedules.js equivalent)
+    // ==========================================
+    const FERRY_OPERATORS = [
+      {
+        id: "refcool",
+        name: "Refcool",
+        description: "Daily scheduled passenger ferry service.",
+        schedule: [
+          { id: "r1", time: "06:30 AM", departure: "Male'", destination: "Thulusdhoo", duration: "45 mins", status: "Departed" },
+          { id: "r2", time: "08:30 AM", departure: "Thulusdhoo", destination: "Male'", duration: "45 mins", status: "Departed" },
+          { id: "r3", time: "11:30 AM", departure: "Male'", destination: "Thulusdhoo", duration: "45 mins", status: "Next Ferry" },
+          { id: "r4", time: "02:30 PM", departure: "Thulusdhoo", destination: "Male'", duration: "45 mins", status: "Upcoming" },
+          { id: "r5", time: "04:30 PM", departure: "Male'", destination: "Thulusdhoo", duration: "45 mins", status: "Upcoming" },
+          { id: "r6", time: "07:30 PM", departure: "Thulusdhoo", destination: "Male'", duration: "45 mins", status: "Upcoming" },
+        ],
+      },
+      {
+        id: "tharika",
+        name: "Tharika Express",
+        description: "Fast transfers and regular island routes.",
+        schedule: [
+          { id: "t1", time: "07:00 AM", departure: "Male'", destination: "Thulusdhoo", duration: "50 mins", status: "Departed" },
+          { id: "t2", time: "09:30 AM", departure: "Thulusdhoo", destination: "Male'", duration: "50 mins", status: "Departed" },
+          { id: "t3", time: "01:00 PM", departure: "Male'", destination: "Thulusdhoo", duration: "50 mins", status: "Next Ferry" },
+          { id: "t4", time: "04:00 PM", departure: "Thulusdhoo", destination: "Male'", duration: "50 mins", status: "Upcoming" },
+          { id: "t5", time: "06:30 PM", departure: "Male'", destination: "Thulusdhoo", duration: "50 mins", status: "Upcoming" },
+        ],
+      },
+      {
+        id: "riverspeed",
+        name: "Riverspeed",
+        description: "Speedboat express services across the atoll.",
+        schedule: [
+          { id: "rv1", time: "08:00 AM", departure: "Male'", destination: "Thulusdhoo", duration: "35 mins", status: "Departed" },
+          { id: "rv2", time: "10:00 AM", departure: "Thulusdhoo", destination: "Male'", duration: "35 mins", status: "Departed" },
+          { id: "rv3", time: "02:00 PM", departure: "Male'", destination: "Thulusdhoo", duration: "35 mins", status: "Next Ferry" },
+          { id: "rv4", time: "05:00 PM", departure: "Male'", destination: "Thulusdhoo", duration: "35 mins", status: "Upcoming" },
+          { id: "rv5", time: "09:00 PM", departure: "Male'", destination: "Thulusdhoo", duration: "35 mins", status: "Upcoming" },
+        ],
+      },
+    ];
 
-  <div class="route-selector">
-    <button class="route-btn active" id="btn-male" onclick="setDirection('MALE_TO_THULUSDHOO')">Malé → Thulusdhoo</button>
-    <button class="route-btn" id="btn-thulusdhoo" onclick="setDirection('THULUSDHOO_TO_MALE')">Thulusdhoo → Malé</button>
-  </div>
-
-  <div class="hero-card" id="hero-card">
-    <div class="hero-badge">NEXT AVAILABLE FERRY</div>
-    <div class="operator-name" id="hero-op">Searching...</div>
-    <div class="time-large" id="hero-time">--:--</div>
-    <div class="countdown" id="hero-countdown">Checking schedule...</div>
-  </div>
-
-  <div class="section-title">
-    <span>Schedule Roller</span>
-    <span style="font-size: 0.7rem; color: var(--primary); cursor: pointer;" onclick="scrollToNextFerry()">Recenter</span>
-  </div>
-
-  <div class="roller-viewport" id="roller-viewport">
-    <div class="schedule-list" id="upcoming-list"></div>
-  </div>
-</div>
-
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js')
-        .then(() => console.log('Service Worker Registered'))
-        .catch((err) => console.error('SW Registration Failed:', err));
-    });
-  }
-
-  const SCHEDULES = {
-    THULUSDHOO_TO_MALE: [
-      { time: "08:00", op: "River Speed" },
-      { time: "08:00", op: "Refcool Marine" },
-      { time: "08:00", op: "Tharika Express" },
-      { time: "10:15", op: "Tharika Express", exceptFriday: true },
-      { time: "10:30", op: "River Speed", exceptFriday: true },
-      { time: "10:30", op: "Refcool Marine", exceptFriday: true },
-      { time: "14:00", op: "Refcool Marine", fridayTime: "14:30" },
-      { time: "14:15", op: "Tharika Express" },
-      { time: "14:30", op: "River Speed", fridayTime: "15:00" },
-      { time: "17:00", op: "Refcool Marine" },
-      { time: "17:00", op: "Tharika Express" },
-      { time: "17:30", op: "River Speed" },
-      { time: "19:30", op: "River Speed" },
-      { time: "20:00", op: "Refcool Marine" },
-      { time: "20:00", op: "Tharika Express" }
-    ],
-    MALE_TO_THULUSDHOO: [
-      { time: "09:15", op: "Refcool Marine" },
-      { time: "09:15", op: "Tharika Express" },
-      { time: "09:20", op: "River Speed" },
-      { time: "12:15", op: "Tharika Express", exceptFriday: true },
-      { time: "12:20", op: "River Speed", exceptFriday: true },
-      { time: "12:30", op: "Refcool Marine", exceptFriday: true },
-      { time: "15:30", op: "Refcool Marine" },
-      { time: "16:00", op: "Tharika Express" },
-      { time: "16:20", op: "River Speed" },
-      { time: "18:30", op: "Refcool Marine" },
-      { time: "18:30", op: "Tharika Express" },
-      { time: "20:20", op: "River Speed" },
-      { time: "22:00", op: "Refcool Marine" },
-      { time: "22:15", op: "River Speed" },
-      { time: "22:15", op: "Tharika Express" }
-    ]
-  };
-
-  let currentDirection = 'MALE_TO_THULUSDHOO';
-  let nextFerryIndex = -1;
-
-  function setDirection(dir) {
-    currentDirection = dir;
-    document.getElementById('btn-male').classList.toggle('active', dir === 'MALE_TO_THULUSDHOO');
-    document.getElementById('btn-thulusdhoo').classList.toggle('active', dir === 'THULUSDHOO_TO_MALE');
-    updateApp();
-  }
-
-  function getActiveSchedules(direction) {
-    const now = new Date();
-    const isFriday = now.getDay() === 5;
-
-    const rawList = SCHEDULES[direction];
-    const activeList = [];
-
-    rawList.forEach(item => {
-      if (isFriday && item.exceptFriday) return;
-
-      let departureTime = item.time;
-      if (isFriday && item.fridayTime) {
-        departureTime = item.fridayTime;
+    // Helper for Status Badge styling
+    const getStatusBadge = (status) => {
+      switch (status) {
+        case 'Next Ferry':
+          return 'bg-emerald-100 text-emerald-800 border-emerald-300 font-semibold animate-pulse';
+        case 'Upcoming':
+          return 'bg-blue-50 text-blue-700 border-blue-200';
+        case 'Departed':
+          return 'bg-gray-100 text-gray-500 border-gray-200';
+        default:
+          return 'bg-gray-100 text-gray-700';
       }
+    };
 
-      activeList.push({
-        operator: item.op,
-        time: departureTime
-      });
-    });
+    // ==========================================
+    // 2. MODAL COMPONENT (ScheduleModal.jsx)
+    // ==========================================
+    const ScheduleModal = ({ operator, onClose }) => {
+      if (!operator) return null;
 
-    return activeList.sort((a, b) => a.time.localeCompare(b.time));
-  }
+      return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-white rounded-2xl shadow-2xl overflow-hidden">
+            
+            {/* Modal Header */}
+            <div className="p-5 border-b border-gray-100 flex items-center justify-between bg-slate-900 text-white">
+              <div>
+                <h2 className="text-xl font-bold">{operator.name}</h2>
+                <p className="text-xs text-slate-300 mt-0.5">{operator.description}</p>
+              </div>
+              <button
+                onClick={onClose}
+                className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+                aria-label="Close modal"
+              >
+                ✕
+              </button>
+            </div>
 
-  function scrollToNextFerry() {
-    if (nextFerryIndex === -1) return;
-    const viewport = document.getElementById('roller-viewport');
-    const targetItem = document.getElementById(`ferry-item-${nextFerryIndex}`);
-    if (targetItem) {
-      // Offset position to keep 3 departed ferries (or items) visible above
-      const itemHeight = 64 + 10; // height + gap
-      const targetScrollTop = Math.max(0, (nextFerryIndex - 3) * itemHeight);
-      viewport.scrollTo({ top: targetScrollTop, behavior: 'smooth' });
-    }
-  }
+            {/* Timetable Body */}
+            <div className="p-4 sm:p-6 overflow-y-auto space-y-3">
+              <div className="flex items-center justify-between pb-2">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-500">
+                  Today's Schedule
+                </h3>
+                <span className="text-xs text-gray-400">Live Status</span>
+              </div>
 
-  function updateApp() {
-    const now = new Date();
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    
-    document.getElementById('current-day-time').innerText = 
-      `${days[now.getDay()]}, ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+              {/* Schedule List */}
+              <div className="space-y-3">
+                {operator.schedule.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-white hover:border-blue-200 hover:shadow-sm transition-all gap-3"
+                  >
+                    <div className="flex items-start sm:items-center gap-4">
+                      <span className="text-lg font-bold text-gray-900 min-w-[85px]">
+                        {item.time}
+                      </span>
+                      
+                      <div className="flex flex-col">
+                        <div className="flex items-center text-sm font-semibold text-gray-800 gap-1.5">
+                          <span>{item.departure}</span>
+                          <span className="text-gray-400">→</span>
+                          <span>{item.destination}</span>
+                        </div>
+                        {item.duration && (
+                          <span className="text-xs text-gray-500 mt-0.5">
+                            Duration: {item.duration}
+                          </span>
+                        )}
+                      </div>
+                    </div>
 
-    const currentMinutes = now.getHours() * 60 + now.getMinutes();
-    const schedule = getActiveSchedules(currentDirection);
+                    <div className="self-end sm:self-center">
+                      <span className={`px-3 py-1 text-xs rounded-full border ${getStatusBadge(item.status)}`}>
+                        {item.status}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
 
-    let nextFerry = null;
-    let upcoming = [];
-    nextFerryIndex = -1;
+            {/* Modal Footer */}
+            <div className="p-4 bg-gray-50 border-t border-gray-100 text-right">
+              <button
+                onClick={onClose}
+                className="px-5 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
+              >
+                Close
+              </button>
+            </div>
 
-    schedule.forEach((item, index) => {
-      const [h, m] = item.time.split(':').map(Number);
-      const itemMinutes = h * 60 + m;
-
-      if (itemMinutes > currentMinutes) {
-        if (!nextFerry) {
-          nextFerry = { ...item, minutesDiff: itemMinutes - currentMinutes };
-          nextFerryIndex = index;
-        }
-        upcoming.push({ ...item, isPast: false, isNext: index === nextFerryIndex });
-      } else {
-        upcoming.push({ ...item, isPast: true, isNext: false });
-      }
-    });
-
-    if (nextFerry) {
-      document.getElementById('hero-op').innerText = nextFerry.operator;
-      document.getElementById('hero-time').innerText = format12hr(nextFerry.time);
-      
-      const hrs = Math.floor(nextFerry.minutesDiff / 60);
-      const mins = nextFerry.minutesDiff % 60;
-      let countdownText = "Departs in ";
-      if (hrs > 0) countdownText += `${hrs} hr `;
-      countdownText += `${mins} mins`;
-      
-      document.getElementById('hero-countdown').innerText = countdownText;
-    } else {
-      document.getElementById('hero-op').innerText = "No more ferries today";
-      document.getElementById('hero-time').innerText = "Tomorrow";
-      document.getElementById('hero-countdown').innerText = "Check back in the morning";
-      nextFerryIndex = schedule.length > 0 ? schedule.length - 1 : 0;
-    }
-
-    const listContainer = document.getElementById('upcoming-list');
-    listContainer.innerHTML = '';
-    
-    upcoming.forEach((item, i) => {
-      const div = document.createElement('div');
-      div.id = `ferry-item-${i}`;
-      div.className = `schedule-item ${item.isPast ? 'past' : ''} ${item.isNext ? 'next-highlight' : ''}`;
-      
-      let badgeClass = 'scheduled';
-      let badgeText = 'Scheduled';
-      if (item.isPast) {
-        badgeClass = 'departed';
-        badgeText = 'Departed';
-      } else if (item.isNext) {
-        badgeClass = 'next';
-        badgeText = 'Next Up';
-      }
-
-      div.innerHTML = `
-        <div>
-          <div class="item-time">${format12hr(item.time)}</div>
-          <div class="item-op">${item.operator}</div>
+          </div>
         </div>
-        <div class="status-pill ${badgeClass}">
-          ${badgeText}
+      );
+    };
+
+    // ==========================================
+    // 3. MAIN APP COMPONENT (App.jsx)
+    // ==========================================
+    function App() {
+      const [selectedOperator, setSelectedOperator] = React.useState(null);
+
+      return (
+        <div className="min-h-screen bg-slate-50 py-10 px-4 sm:px-6">
+          <div className="max-w-4xl mx-auto space-y-8">
+            
+            <div className="text-center space-y-2">
+              <h1 className="text-3xl font-extrabold text-slate-900 sm:text-4xl">
+                Ferry Operator Schedules
+              </h1>
+              <p className="text-slate-600">
+                Select an operator below to view full daily departure timetables.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {FERRY_OPERATORS.map((operator) => (
+                <button
+                  key={operator.id}
+                  onClick={() => setSelectedOperator(operator)}
+                  className="group flex flex-col justify-between p-6 bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md hover:border-blue-500 transition-all text-left focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <h2 className="text-xl font-bold text-slate-800 group-hover:text-blue-600 transition-colors">
+                        {operator.name}
+                      </h2>
+                      <span className="text-slate-400 group-hover:translate-x-1 transition-transform">
+                        →
+                      </span>
+                    </div>
+                    <p className="text-sm text-slate-500 leading-relaxed">
+                      {operator.description}
+                    </p>
+                  </div>
+
+                  <div className="mt-6 text-xs font-semibold text-blue-600 flex items-center gap-1">
+                    View Today's Timetable
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            <ScheduleModal
+              operator={selectedOperator}
+              onClose={() => setSelectedOperator(null)}
+            />
+
+          </div>
         </div>
-      `;
-      listContainer.appendChild(div);
-    });
+      );
+    }
 
-    // Auto-scroll the roller into position
-    setTimeout(scrollToNextFerry, 100);
-  }
-
-  function format12hr(timeStr) {
-    const [h, m] = timeStr.split(':').map(Number);
-    const ampm = h >= 12 ? 'PM' : 'AM';
-    const hour12 = h % 12 || 12;
-    return `${hour12}:${m < 10 ? '0' : ''}${m} ${ampm}`;
-  }
-
-  updateApp();
-  setInterval(updateApp, 30000);
-</script>
+    // Render the App
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
 </body>
 </html>
