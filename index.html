@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thulusdhoo Ferry Finder</title>
+
+  <!-- PWA Meta Tags -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="FerryFinder">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --primary: #38bdf8;
+      --text: #f8fafc;
+      --subtext: #94a3b8;
+      --accent: #22c55e;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      user-select: none;
+    }
+    .container {
+      width: 100%;
+      max-width: 480px;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    h1 { margin: 0 0 4px 0; font-size: 1.5rem; }
+    p.subtitle { color: var(--subtext); margin: 0; font-size: 0.9rem; }
+    
+    .route-selector {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .route-btn {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid #334155;
+      background: #1e293b;
+      color: var(--text);
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+    .route-btn.active {
+      background: var(--primary);
+      color: #0f172a;
+      border-color: var(--primary);
+    }
+
+    .hero-card {
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      border: 2px solid var(--primary);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 10px 25px -5px rgba(56, 189, 248, 0.15);
+      margin-bottom: 24px;
+    }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(56, 189, 248, 0.2);
+      color: var(--primary);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      margin-bottom: 12px;
+    }
+    .time-large {
+      font-size: 2.8rem;
+      font-weight: 800;
+      margin: 4px 0;
+      color: #ffffff;
+    }
+    .operator-name {
+      font-size: 1.2rem;
+      color: var(--primary);
+      font-weight: 600;
+    }
+    .countdown {
+      font-size: 0.95rem;
+      color: var(--accent);
+      margin-top: 8px;
+      font-weight: 500;
+    }
+
+    .section-title {
+      font-size: 1rem;
+      color: var(--subtext);
+      margin-bottom: 12px;
+    }
+    .schedule-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .schedule-item {
+      background: var(--card-bg);
+      border-radius: 10px;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .schedule-item.past {
+      opacity: 0.4;
+    }
+    .item-time { font-weight: bold; font-size: 1.1rem; }
+    .item-op { font-size: 0.85rem; color: var(--subtext); }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>Thulusdhoo Ferry Finder</h1>
+    <p class="subtitle" id="current-day-time">Loading time...</p>
+  </header>
+
+  <div class="route-selector">
+    <button class="route-btn active" id="btn-male" onclick="setDirection('MALE_TO_THULUSDHOO')">Malé → Thulusdhoo</button>
+    <button class="route-btn" id="btn-thulusdhoo" onclick="setDirection('THULUSDHOO_TO_MALE')">Thulusdhoo → Malé</button>
+  </div>
+
+  <div class="hero-card" id="hero-card">
+    <div class="hero-badge">NEXT AVAILABLE FERRY</div>
+    <div class="operator-name" id="hero-op">Searching...</div>
+    <div class="time-large" id="hero-time">--:--</div>
+    <div class="countdown" id="hero-countdown">Checking schedule...</div>
+  </div>
+
+  <div class="section-title">Today's Timetable</div>
+  <div class="schedule-list" id="upcoming-list"></div>
+</div>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then(() => console.log('Service Worker Registered'))
+        .catch((err) => console.error('SW Registration Failed:', err));
+    });
+  }
+
+  const SCHEDULES = {
+    THULUSDHOO_TO_MALE: [
+      { time: "08:00", op: "River Speed" },
+      { time: "08:00", op: "Refcool Marine" },
+      { time: "08:00", op: "Tharika Express" },
+      { time: "10:15", op: "Tharika Express", exceptFriday: true },
+      { time: "10:30", op: "River Speed", exceptFriday: true },
+      { time: "10:30", op: "Refcool Marine", exceptFriday: true },
+      { time: "14:00", op: "Refcool Marine", fridayTime: "14:30" },
+      { time: "14:15", op: "Tharika Express" },
+      { time: "14:30", op: "River Speed", fridayTime: "15:00" },
+      { time: "17:00", op: "Refcool Marine" },
+      { time: "17:00", op: "Tharika Express" },
+      { time: "17:30", op: "River Speed" },
+      { time: "19:30", op: "River Speed" },
+      { time: "20:00", op: "Refcool Marine" },
+      { time: "20:00", op: "Tharika Express" }
+    ],
+    MALE_TO_THULUSDHOO: [
+      { time: "09:15", op: "Refcool Marine" },
+      { time: "09:15", op: "Tharika Express" },
+      { time: "09:20", op: "River Speed" },
+      { time: "12:15", op: "Tharika Express", exceptFriday: true },
+      { time: "12:20", op: "River Speed", exceptFriday: true },
+      { time: "12:30", op: "Refcool Marine", exceptFriday: true },
+      { time: "15:30", op: "Refcool Marine" },
+      { time: "16:00", op: "Tharika Express" },
+      { time: "16:20", op: "River Speed" },
+      { time: "18:30", op: "Refcool Marine" },
+      { time: "18:30", op: "Tharika Express" },
+      { time: "20:20", op: "River Speed" },
+      { time: "22:00", op: "Refcool Marine" },
+      { time: "22:15", op: "River Speed" },
+      { time: "22:15", op: "Tharika Express" }
+    ]
+  };
+
+  let currentDirection = 'MALE_TO_THULUSDHOO';
+
+  function setDirection(dir) {
+    currentDirection = dir;
+    document.getElementById('btn-male').classList.toggle('active', dir === 'MALE_TO_THULUSDHOO');
+    document.getElementById('btn-thulusdhoo').classList.toggle('active', dir === 'THULUSDHOO_TO_MALE');
+    updateApp();
+  }
+
+  function getActiveSchedules(direction) {
+    const now = new Date();
+    const isFriday = now.getDay() === 5;
+
+    const rawList = SCHEDULES[direction];
+    const activeList = [];
+
+    rawList.forEach(item => {
+      if (isFriday && item.exceptFriday) return;
+
+      let departureTime = item.time;
+      if (isFriday && item.fridayTime) {
+        departureTime = item.fridayTime;
+      }
+
+      activeList.push({
+        operator: item.op,
+        time: departureTime
+      });
+    });
+
+    return activeList.sort((a, b) => a.time.localeCompare(b.time));
+  }
+
+  function updateApp() {
+    const now = new Date();
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    
+    document.getElementById('current-day-time').innerText = 
+      `${days[now.getDay()]}, ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    const schedule = getActiveSchedules(currentDirection);
+
+    let nextFerry = null;
+    let upcoming = [];
+
+    schedule.forEach(item => {
+      const [h, m] = item.time.split(':').map(Number);
+      const itemMinutes = h * 60 + m;
+
+      if (itemMinutes > currentMinutes) {
+        if (!nextFerry) nextFerry = { ...item, minutesDiff: itemMinutes - currentMinutes };
+        upcoming.push({ ...item, isPast: false });
+      } else {
+        upcoming.push({ ...item, isPast: true });
+      }
+    });
+
+    if (nextFerry) {
+      document.getElementById('hero-op').innerText = nextFerry.operator;
+      document.getElementById('hero-time').innerText = format12hr(nextFerry.time);
+      
+      const hrs = Math.floor(nextFerry.minutesDiff / 60);
+      const mins = nextFerry.minutesDiff % 60;
+      let countdownText = "Departs in ";
+      if (hrs > 0) countdownText += `${hrs} hr `;
+      countdownText += `${mins} mins`;
+      
+      document.getElementById('hero-countdown').innerText = countdownText;
+    } else {
+      document.getElementById('hero-op').innerText = "No more ferries today";
+      document.getElementById('hero-time').innerText = "Tomorrow";
+      document.getElementById('hero-countdown').innerText = "Check back in the morning";
+    }
+
+    const listContainer = document.getElementById('upcoming-list');
+    listContainer.innerHTML = '';
+    
+    upcoming.forEach(item => {
+      const div = document.createElement('div');
+      div.className = `schedule-item ${item.isPast ? 'past' : ''}`;
+      div.innerHTML = `
+        <div>
+          <div class="item-time">${format12hr(item.time)}</div>
+          <div class="item-op">${item.operator}</div>
+        </div>
+        <div style="font-size: 0.8rem; color: var(--subtext);">
+          ${item.isPast ? 'Departed' : 'Scheduled'}
+        </div>
+      `;
+      listContainer.appendChild(div);
+    });
+  }
+
+  function format12hr(timeStr) {
+    const [h, m] = timeStr.split(':').map(Number);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const hour12 = h % 12 || 12;
+    return `${hour12}:${m < 10 ? '0' : ''}${m} ${ampm}`;
+  }
+
+  updateApp();
+  setInterval(updateApp, 30000);
+</script>
+</body>
+</html>
