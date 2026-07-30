@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 
-const ScheduleModal = ({ operator, isFriday, onClose }) => {
+export const ScheduleModal = ({ operator, isFriday, onClose }) => {
   if (!operator) return null;
   
   const [filterRoute, setFilterRoute] = useState('ALL');
@@ -12,18 +12,21 @@ const ScheduleModal = ({ operator, isFriday, onClose }) => {
   }, [rawSchedule, filterRoute]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-      <div className="relative w-full max-w-md max-h-[90vh] flex flex-col bg-[#131d35] rounded-3xl border border-slate-700/60 shadow-2xl overflow-hidden text-white">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm transition-opacity">
+      <div className="relative w-full max-w-md bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden text-slate-800 border border-slate-100 max-h-[85vh] flex flex-col">
         
-        {/* Header */}
-        <div className="p-5 border-b border-slate-800 bg-[#0f172a] flex items-start justify-between">
+        {/* Modal Header */}
+        <div className="p-5 border-b border-slate-100 bg-slate-50 flex items-start justify-between">
           <div>
-            <h2 className="text-xl font-black text-white">{operator.name}</h2>
-            <p className="text-xs text-slate-400 mt-0.5">{operator.description}</p>
+            <span className="text-[10px] uppercase font-bold tracking-wider text-sky-600 bg-sky-100 px-2.5 py-0.5 rounded-full">
+              {operator.tag}
+            </span>
+            <h2 className="text-xl font-black text-slate-900 mt-1">{operator.name}</h2>
+            <p className="text-xs text-slate-500 mt-0.5">{operator.description}</p>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+            className="w-8 h-8 rounded-full bg-slate-200/60 flex items-center justify-center text-slate-500 hover:text-slate-800 transition-colors"
           >
             ✕
           </button>
@@ -32,90 +35,90 @@ const ScheduleModal = ({ operator, isFriday, onClose }) => {
         {/* Modal Body */}
         <div className="p-5 overflow-y-auto space-y-4">
           
-          {/* Fares & Booking Info */}
-          <div className="grid grid-cols-2 gap-2 bg-[#0a0f1d] p-3 rounded-2xl border border-slate-800/80 text-xs">
-            <div>
+          {/* Fare Cards */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
               <span className="text-slate-400 block text-[10px] uppercase font-bold">One Way</span>
-              <span className="font-bold text-emerald-400 text-sm">{operator.fareOneWay}</span>
+              <span className="font-extrabold text-emerald-600 text-base">{operator.fareOneWay}</span>
             </div>
-            <div>
+            <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
               <span className="text-slate-400 block text-[10px] uppercase font-bold">Roundtrip</span>
-              <span className="font-bold text-cyan-400 text-sm">{operator.fareRoundTrip}</span>
+              <span className="font-extrabold text-sky-600 text-base">{operator.fareRoundTrip}</span>
             </div>
           </div>
 
-          {/* Contacts / Links */}
-          <div className="space-y-1.5 bg-[#0a0f1d] p-3 rounded-2xl border border-slate-800/80 text-xs">
+          {/* Contact Info */}
+          <div className="space-y-2 bg-slate-50 p-3.5 rounded-2xl border border-slate-100 text-xs">
             <div>
-              <span className="text-slate-400 font-medium">Booking Contacts: </span>
-              <span className="font-bold text-slate-200">{operator.booking.join(" / ")}</span>
+              <span className="text-slate-400 block text-[10px] uppercase font-bold mb-0.5">Hotline Contacts</span>
+              <div className="flex gap-2">
+                {operator.booking.map((phone, i) => (
+                  <a key={i} href={`tel:${phone}`} className="font-bold text-slate-800 bg-white px-2.5 py-1 rounded-lg border border-slate-200 hover:border-sky-500 transition-colors">
+                    📞 {phone}
+                  </a>
+                ))}
+              </div>
             </div>
             {operator.website && (
-              <div>
+              <div className="pt-1">
                 <span className="text-slate-400 font-medium">Website: </span>
-                <a href={`https://${operator.website}`} target="_blank" rel="noreferrer" className="text-[#00a3e0] underline font-medium">
+                <a href={`https://${operator.website}`} target="_blank" rel="noreferrer" className="text-sky-600 font-bold underline">
                   {operator.website}
                 </a>
               </div>
             )}
-            {operator.email && (
-              <div>
-                <span className="text-slate-400 font-medium">Email: </span>
-                <span className="text-slate-200 font-medium">{operator.email}</span>
-              </div>
-            )}
           </div>
 
-          {/* Route Filter Tabs */}
-          <div className="flex gap-1 bg-[#0a0f1d] p-1 rounded-xl border border-slate-800 text-[11px] font-bold">
+          {/* Route Tabs */}
+          <div className="flex gap-1 bg-slate-100 p-1 rounded-xl text-[11px] font-bold">
             <button
               onClick={() => setFilterRoute('ALL')}
-              className={`flex-1 py-1.5 rounded-lg transition-colors ${filterRoute === 'ALL' ? 'bg-[#00a3e0] text-white' : 'text-slate-400 hover:text-white'}`}
+              className={`flex-1 py-1.5 rounded-lg transition-all ${filterRoute === 'ALL' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
             >
               All Routes
             </button>
             <button
               onClick={() => setFilterRoute('MALE_TO_THULUSDHOO')}
-              className={`flex-1 py-1.5 rounded-lg transition-colors ${filterRoute === 'MALE_TO_THULUSDHOO' ? 'bg-[#00a3e0] text-white' : 'text-slate-400 hover:text-white'}`}
+              className={`flex-1 py-1.5 rounded-lg transition-all ${filterRoute === 'MALE_TO_THULUSDHOO' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
             >
               Malé → Thulus
             </button>
             <button
               onClick={() => setFilterRoute('THULUSDHOO_TO_MALE')}
-              className={`flex-1 py-1.5 rounded-lg transition-colors ${filterRoute === 'THULUSDHOO_TO_MALE' ? 'bg-[#00a3e0] text-white' : 'text-slate-400 hover:text-white'}`}
+              className={`flex-1 py-1.5 rounded-lg transition-all ${filterRoute === 'THULUSDHOO_TO_MALE' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
             >
               Thulus → Malé
             </button>
           </div>
 
-          {/* Timetable List */}
+          {/* Schedule List */}
           <div className="space-y-2">
             <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-slate-400">
-              <span>Operator Schedule</span>
-              {isFriday && <span className="text-amber-400 font-semibold">(Friday Timetable)</span>}
+              <span>Timetable</span>
+              {isFriday && <span className="text-amber-600 font-semibold">(Friday Schedule)</span>}
             </div>
 
             {modalSchedule && modalSchedule.length > 0 ? (
               modalSchedule.map((item) => (
-                <div key={item.id} className="flex items-center justify-between p-3 rounded-xl bg-[#0a0f1d]/60 border border-slate-800">
-                  <span className="text-sm font-bold text-white">{item.time}</span>
-                  <span className="text-xs font-semibold text-slate-400">{item.departure} → {item.destination}</span>
+                <div key={item.id} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100">
+                  <span className="text-sm font-extrabold text-slate-800">{item.time}</span>
+                  <span className="text-xs font-semibold text-slate-500">{item.departure} → {item.destination}</span>
                 </div>
               ))
             ) : (
-              <p className="text-xs text-slate-500 py-4 text-center">No departures for this route.</p>
+              <p className="text-xs text-slate-400 py-4 text-center">No departures scheduled for this route.</p>
             )}
           </div>
 
         </div>
 
         {/* Footer */}
-        <div className="p-4 bg-[#0f172a] border-t border-slate-800 text-right">
+        <div className="p-4 bg-slate-50 border-t border-slate-100 text-right">
           <button
             onClick={onClose}
-            className="px-5 py-2 text-xs font-bold text-white bg-[#00a3e0] rounded-xl hover:bg-[#008ec3] transition-colors"
+            className="w-full py-2.5 text-xs font-bold text-white bg-slate-900 rounded-xl hover:bg-slate-800 transition-colors shadow-sm"
           >
-            Close
+            Done
           </button>
         </div>
 
@@ -123,5 +126,3 @@ const ScheduleModal = ({ operator, isFriday, onClose }) => {
     </div>
   );
 };
-
-export default ScheduleModal;
