@@ -1,4 +1,4 @@
-export const FERRY_OPERATORS = [
+const FERRY_OPERATORS = [
   {
     id: "tharika",
     name: "Tharika Express",
@@ -88,7 +88,7 @@ export const FERRY_OPERATORS = [
   },
 ];
 
-export const getDepartureStatus = (time24, nextFerryTracker, now) => {
+const getDepartureStatus = (time24, nextFerryTracker, now) => {
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
   const [hours, minutes] = time24.split(':').map(Number);
   const itemMinutes = hours * 60 + minutes;
