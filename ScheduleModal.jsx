@@ -1,10 +1,12 @@
-const ScheduleModal = ({ operator, isFriday, onClose }) => {
+import React, { useState, useMemo } from 'react';
+
+export default function ScheduleModal({ operator, isFriday, onClose }) {
   if (!operator) return null;
   
-  const [filterRoute, setFilterRoute] = React.useState('ALL');
+  const [filterRoute, setFilterRoute] = useState('ALL');
   const rawSchedule = isFriday ? operator.fridaySchedule : operator.regularSchedule;
 
-  const modalSchedule = React.useMemo(() => {
+  const modalSchedule = useMemo(() => {
     if (filterRoute === 'ALL') return rawSchedule;
     return rawSchedule.filter((item) => item.route === filterRoute);
   }, [rawSchedule, filterRoute]);
@@ -32,8 +34,6 @@ const ScheduleModal = ({ operator, isFriday, onClose }) => {
 
         {/* Modal Body */}
         <div className="p-5 overflow-y-auto space-y-4">
-          
-          {/* Fare Cards */}
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
               <span className="text-slate-400 block text-[10px] uppercase font-bold">One Way</span>
@@ -45,7 +45,6 @@ const ScheduleModal = ({ operator, isFriday, onClose }) => {
             </div>
           </div>
 
-          {/* Contact Info */}
           <div className="space-y-2 bg-slate-50 p-3.5 rounded-2xl border border-slate-100 text-xs">
             <div>
               <span className="text-slate-400 block text-[10px] uppercase font-bold mb-0.5">Hotline Contacts</span>
@@ -67,7 +66,6 @@ const ScheduleModal = ({ operator, isFriday, onClose }) => {
             )}
           </div>
 
-          {/* Route Tabs */}
           <div className="flex gap-1 bg-slate-100 p-1 rounded-xl text-[11px] font-bold">
             <button
               onClick={() => setFilterRoute('ALL')}
@@ -89,7 +87,6 @@ const ScheduleModal = ({ operator, isFriday, onClose }) => {
             </button>
           </div>
 
-          {/* Schedule List */}
           <div className="space-y-2">
             <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-slate-400">
               <span>Timetable</span>
@@ -107,10 +104,8 @@ const ScheduleModal = ({ operator, isFriday, onClose }) => {
               <p className="text-xs text-slate-400 py-4 text-center">No departures scheduled for this route.</p>
             )}
           </div>
-
         </div>
 
-        {/* Footer */}
         <div className="p-4 bg-slate-50 border-t border-slate-100 text-right">
           <button
             onClick={onClose}
@@ -119,8 +114,7 @@ const ScheduleModal = ({ operator, isFriday, onClose }) => {
             Done
           </button>
         </div>
-
       </div>
     </div>
   );
-};
+}
