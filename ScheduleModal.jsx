@@ -1,12 +1,10 @@
-import React, { useState, useMemo } from 'react';
-
-export const ScheduleModal = ({ operator, isFriday, onClose }) => {
+const ScheduleModal = ({ operator, isFriday, onClose }) => {
   if (!operator) return null;
   
-  const [filterRoute, setFilterRoute] = useState('ALL');
+  const [filterRoute, setFilterRoute] = React.useState('ALL');
   const rawSchedule = isFriday ? operator.fridaySchedule : operator.regularSchedule;
 
-  const modalSchedule = useMemo(() => {
+  const modalSchedule = React.useMemo(() => {
     if (filterRoute === 'ALL') return rawSchedule;
     return rawSchedule.filter((item) => item.route === filterRoute);
   }, [rawSchedule, filterRoute]);
