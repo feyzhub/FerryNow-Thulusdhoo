@@ -1,14 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { FERRY_OPERATORS, getDepartureStatus } from './ferryData.js';
-import { ScheduleModal } from './ScheduleModal.jsx';
-
-export default function App() {
-  const [selectedOperator, setSelectedOperator] = useState(null);
-  const [activeRoute, setActiveRoute] = useState('MALE_TO_THULUSDHOO');
-  const [now, setNow] = useState(new Date());
+function App() {
+  const [selectedOperator, setSelectedOperator] = React.useState(null);
+  const [activeRoute, setActiveRoute] = React.useState('MALE_TO_THULUSDHOO');
+  const [now, setNow] = React.useState(new Date());
 
   // Live Timer
-  useEffect(() => {
+  React.useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
@@ -28,7 +24,7 @@ export default function App() {
   });
 
   // Filter and sort trips
-  const fullDailySchedule = useMemo(() => {
+  const fullDailySchedule = React.useMemo(() => {
     let trips = [];
     FERRY_OPERATORS.forEach((operator) => {
       const scheduleList = isFriday ? operator.fridaySchedule : operator.regularSchedule;
@@ -55,7 +51,7 @@ export default function App() {
   const nextAvailableFerry = processedSchedule.find((item) => item.isNext);
 
   // Countdown String
-  const countdownString = useMemo(() => {
+  const countdownString = React.useMemo(() => {
     if (!nextAvailableFerry) return null;
     const [hours, minutes] = nextAvailableFerry.time24.split(':').map(Number);
     const target = new Date(now);
