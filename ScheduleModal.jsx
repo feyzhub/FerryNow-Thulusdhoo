@@ -1,159 +1,119 @@
-// src/components/ScheduleModal.jsx
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 
-// Helper to determine status based on current time
-const getFerryStatus = (time24, nextFerryFound) => {
-  const now = new Date();
-  const currentMinutes = now.getHours() * 60 + now.getMinutes();
-
-  const [hours, minutes] = time24.split(':').map(Number);
-  const ferryMinutes = hours * 60 + minutes;
-
-  if (ferryMinutes < currentMinutes) {
-    return { status: 'Departed', isNext: false };
-  } else if (!nextFerryFound.flag) {
-    nextFerryFound.flag = true;
-    return { status: 'Next Ferry', isNext: true };
-  } else {
-    return { status: 'Upcoming', isNext: false };
-  }
-};
-
-const getBadgeStyle = (status) => {
-  switch (status) {
-    case 'Next Ferry':
-      return 'bg-emerald-100 text-emerald-800 border-emerald-300 font-semibold animate-pulse';
-    case 'Upcoming':
-      return 'bg-blue-50 text-blue-700 border-blue-200';
-    case 'Departed':
-      return 'bg-gray-100 text-gray-400 border-gray-200';
-    default:
-      return 'bg-gray-100 text-gray-700';
-  }
-};
-
-export const ScheduleModal = ({ operator, onClose }) => {
-  const [filter, setFilter] = useState('ALL'); // 'ALL', 'TO_THULUSDHOO', 'TO_MALE'
-
+const ScheduleModal = ({ operator, isFriday, onClose }) => {
   if (!operator) return null;
+  
+  const [filterRoute, setFilterRoute] = useState('ALL');
+  const rawSchedule = isFriday ? operator.fridaySchedule : operator.regularSchedule;
 
-  const nextFerryFound = { flag: false };
-
-  const filteredSchedule = operator.schedule.filter((item) => {
-    if (filter === 'TO_THULUSDHOO') return item.destination === 'Thulusdhoo';
-    if (filter === 'TO_MALE') return item.destination === "Male'";
-    return true;
-  });
+  const modalSchedule = useMemo(() => {
+    if (filterRoute === 'ALL') return rawSchedule;
+    return rawSchedule.filter((item) => item.route === filterRoute);
+  }, [rawSchedule, filterRoute]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-white rounded-2xl shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+      <div className="relative w-full max-w-md max-h-[90vh] flex flex-col bg-[#131d35] rounded-3xl border border-slate-700/60 shadow-2xl overflow-hidden text-white">
         
         {/* Header */}
-        <div className="p-5 border-b border-gray-100 bg-slate-900 text-white flex items-center justify-between">
+        <div className="p-5 border-b border-slate-800 bg-[#0f172a] flex items-start justify-between">
           <div>
-            <div className="flex items-center gap-3">
-              <h2 className="text-xl font-bold">{operator.name}</h2>
-              {operator.fare && (
-                <span className="px-2.5 py-0.5 text-xs font-semibold bg-blue-600 rounded-full">
-                  {operator.fare}
-                </span>
-              )}
-            </div>
-            <p className="text-xs text-slate-300 mt-1">{operator.description}</p>
+            <h2 className="text-xl font-black text-white">{operator.name}</h2>
+            <p className="text-xs text-slate-400 mt-0.5">{operator.description}</p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
-            aria-label="Close modal"
+            className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
           >
             ✕
           </button>
         </div>
 
-        {/* Route Filter Tabs */}
-        <div className="flex border-b border-gray-200 bg-slate-50 p-2 gap-2 text-xs font-semibold">
-          <button
-            onClick={() => setFilter('ALL')}
-            className={`flex-1 py-2 rounded-lg transition-all ${
-              filter === 'ALL' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            All Routes
-          </button>
-          <button
-            onClick={() => setFilter('TO_THULUSDHOO')}
-            className={`flex-1 py-2 rounded-lg transition-all ${
-              filter === 'TO_THULUSDHOO' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            To Thulusdhoo
-          </button>
-          <button
-            onClick={() => setFilter('TO_MALE')}
-            className={`flex-1 py-2 rounded-lg transition-all ${
-              filter === 'TO_MALE' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            To Male'
-          </button>
-        </div>
+        {/* Modal Body */}
+        <div className="p-5 overflow-y-auto space-y-4">
+          
+          {/* Fares & Booking Info */}
+          <div className="grid grid-cols-2 gap-2 bg-[#0a0f1d] p-3 rounded-2xl border border-slate-800/80 text-xs">
+            <div>
+              <span className="text-slate-400 block text-[10px] uppercase font-bold">One Way</span>
+              <span className="font-bold text-emerald-400 text-sm">{operator.fareOneWay}</span>
+            </div>
+            <div>
+              <span className="text-slate-400 block text-[10px] uppercase font-bold">Roundtrip</span>
+              <span className="font-bold text-cyan-400 text-sm">{operator.fareRoundTrip}</span>
+            </div>
+          </div>
 
-        {/* Timetable Body */}
-        <div className="p-4 sm:p-6 overflow-y-auto space-y-3">
-          <div className="space-y-3">
-            {filteredSchedule.length > 0 ? (
-              filteredSchedule.map((item) => {
-                const { status } = getFerryStatus(item.time, nextFerryFound);
-
-                return (
-                  <div
-                    key={item.id}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-white hover:border-blue-200 hover:shadow-sm transition-all gap-3"
-                  >
-                    <div className="flex items-start sm:items-center gap-4">
-                      <span className="text-lg font-bold text-gray-900 min-w-[85px]">
-                        {item.timeFormatted}
-                      </span>
-                      
-                      <div className="flex flex-col">
-                        <div className="flex items-center text-sm font-semibold text-gray-800 gap-1.5">
-                          <span>{item.departure}</span>
-                          <span className="text-gray-400">→</span>
-                          <span>{item.destination}</span>
-                        </div>
-                        {item.duration && (
-                          <span className="text-xs text-gray-500 mt-0.5">
-                            Duration: {item.duration}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="self-end sm:self-center">
-                      <span className={`px-3 py-1 text-xs rounded-full border ${getBadgeStyle(status)}`}>
-                        {status}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <p className="text-center text-sm text-gray-500 py-8">
-                No trips scheduled for this route direction.
-              </p>
+          {/* Contacts / Links */}
+          <div className="space-y-1.5 bg-[#0a0f1d] p-3 rounded-2xl border border-slate-800/80 text-xs">
+            <div>
+              <span className="text-slate-400 font-medium">Booking Contacts: </span>
+              <span className="font-bold text-slate-200">{operator.booking.join(" / ")}</span>
+            </div>
+            {operator.website && (
+              <div>
+                <span className="text-slate-400 font-medium">Website: </span>
+                <a href={`https://${operator.website}`} target="_blank" rel="noreferrer" className="text-[#00a3e0] underline font-medium">
+                  {operator.website}
+                </a>
+              </div>
+            )}
+            {operator.email && (
+              <div>
+                <span className="text-slate-400 font-medium">Email: </span>
+                <span className="text-slate-200 font-medium">{operator.email}</span>
+              </div>
             )}
           </div>
+
+          {/* Route Filter Tabs */}
+          <div className="flex gap-1 bg-[#0a0f1d] p-1 rounded-xl border border-slate-800 text-[11px] font-bold">
+            <button
+              onClick={() => setFilterRoute('ALL')}
+              className={`flex-1 py-1.5 rounded-lg transition-colors ${filterRoute === 'ALL' ? 'bg-[#00a3e0] text-white' : 'text-slate-400 hover:text-white'}`}
+            >
+              All Routes
+            </button>
+            <button
+              onClick={() => setFilterRoute('MALE_TO_THULUSDHOO')}
+              className={`flex-1 py-1.5 rounded-lg transition-colors ${filterRoute === 'MALE_TO_THULUSDHOO' ? 'bg-[#00a3e0] text-white' : 'text-slate-400 hover:text-white'}`}
+            >
+              Malé → Thulus
+            </button>
+            <button
+              onClick={() => setFilterRoute('THULUSDHOO_TO_MALE')}
+              className={`flex-1 py-1.5 rounded-lg transition-colors ${filterRoute === 'THULUSDHOO_TO_MALE' ? 'bg-[#00a3e0] text-white' : 'text-slate-400 hover:text-white'}`}
+            >
+              Thulus → Malé
+            </button>
+          </div>
+
+          {/* Timetable List */}
+          <div className="space-y-2">
+            <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              <span>Operator Schedule</span>
+              {isFriday && <span className="text-amber-400 font-semibold">(Friday Timetable)</span>}
+            </div>
+
+            {modalSchedule && modalSchedule.length > 0 ? (
+              modalSchedule.map((item) => (
+                <div key={item.id} className="flex items-center justify-between p-3 rounded-xl bg-[#0a0f1d]/60 border border-slate-800">
+                  <span className="text-sm font-bold text-white">{item.time}</span>
+                  <span className="text-xs font-semibold text-slate-400">{item.departure} → {item.destination}</span>
+                </div>
+              ))
+            ) : (
+              <p className="text-xs text-slate-500 py-4 text-center">No departures for this route.</p>
+            )}
+          </div>
+
         </div>
 
         {/* Footer */}
-        <div className="p-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
-          <span className="text-xs text-gray-500">
-            Contact: <strong className="text-gray-700">{operator.contact}</strong>
-          </span>
+        <div className="p-4 bg-[#0f172a] border-t border-slate-800 text-right">
           <button
             onClick={onClose}
-            className="px-5 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
+            className="px-5 py-2 text-xs font-bold text-white bg-[#00a3e0] rounded-xl hover:bg-[#008ec3] transition-colors"
           >
             Close
           </button>
@@ -163,3 +123,5 @@ export const ScheduleModal = ({ operator, onClose }) => {
     </div>
   );
 };
+
+export default ScheduleModal;
