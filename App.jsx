@@ -1,10 +1,13 @@
-function App() {
-  const [selectedOperator, setSelectedOperator] = React.useState(null);
-  const [activeRoute, setActiveRoute] = React.useState('MALE_TO_THULUSDHOO');
-  const [now, setNow] = React.useState(new Date());
+import React, { useState, useEffect, useMemo } from 'react';
+import { FERRY_OPERATORS, getDepartureStatus } from './ferryData.js';
+import ScheduleModal from './ScheduleModal.jsx';
 
-  // Live Timer
-  React.useEffect(() => {
+export default function App() {
+  const [selectedOperator, setSelectedOperator] = useState(null);
+  const [activeRoute, setActiveRoute] = useState('MALE_TO_THULUSDHOO');
+  const [now, setNow] = useState(new Date());
+
+  useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
@@ -23,8 +26,7 @@ function App() {
     day: 'numeric'
   });
 
-  // Filter and sort trips
-  const fullDailySchedule = React.useMemo(() => {
+  const fullDailySchedule = useMemo(() => {
     let trips = [];
     FERRY_OPERATORS.forEach((operator) => {
       const scheduleList = isFriday ? operator.fridaySchedule : operator.regularSchedule;
@@ -41,7 +43,6 @@ function App() {
     return filtered.sort((a, b) => a.time24.localeCompare(b.time24));
   }, [activeRoute, isFriday]);
 
-  // Calculate status for each trip
   const nextFerryTracker = { found: false };
   const processedSchedule = fullDailySchedule.map((item) => {
     const { status, isNext, style } = getDepartureStatus(item.time24, nextFerryTracker, now);
@@ -50,8 +51,7 @@ function App() {
 
   const nextAvailableFerry = processedSchedule.find((item) => item.isNext);
 
-  // Countdown String
-  const countdownString = React.useMemo(() => {
+  const countdownString = useMemo(() => {
     if (!nextAvailableFerry) return null;
     const [hours, minutes] = nextAvailableFerry.time24.split(':').map(Number);
     const target = new Date(now);
@@ -75,7 +75,6 @@ function App() {
     <div className="bg-white sm:rounded-[36px] shadow-xl border border-slate-100 min-h-screen sm:min-h-[840px] p-5 sm:p-6 flex flex-col justify-between space-y-5 overflow-hidden">
       
       <div className="space-y-5">
-        {/* Top Bar: Greeting & Clock */}
         <div className="flex items-center justify-between pt-2 px-1">
           <div>
             <h1 className="text-2xl font-black text-slate-900 tracking-tight">Hello</h1>
@@ -86,14 +85,7 @@ function App() {
           </div>
         </div>
 
-        {/* Dark Hero Card: Next Available Ferry */}
         <div className="bg-[#0b1329] text-white p-6 rounded-3xl shadow-xl relative overflow-hidden flex flex-col items-center justify-center text-center min-h-[160px] border border-slate-800">
-          <div className="absolute top-3 right-3 opacity-10">
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M4 16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2H6c-1.1 0-2 .9-2 2v8zm2-8h12v8H6V8z"/>
-            </svg>
-          </div>
-
           <span className="px-3 py-1 rounded-full bg-sky-500/10 border border-sky-400/30 text-sky-400 text-[10px] font-extrabold tracking-widest uppercase mb-2">
             NEXT AVAILABLE FERRY
           </span>
@@ -111,7 +103,6 @@ function App() {
           </div>
         </div>
 
-        {/* Route Switcher Segmented Control */}
         <div className="bg-slate-100 p-1 rounded-2xl flex gap-1 border border-slate-200/60">
           <button
             onClick={() => setActiveRoute('MALE_TO_THULUSDHOO')}
@@ -135,7 +126,6 @@ function App() {
           </button>
         </div>
 
-        {/* 2x2 Operator Cards Grid */}
         <div className="grid grid-cols-2 gap-3">
           {FERRY_OPERATORS.map((op) => {
             const isSelected = selectedOperator?.id === op.id;
@@ -172,10 +162,7 @@ function App() {
             );
           })}
 
-          {/* Ticket Info Card */}
-          <div 
-            className="p-4 rounded-2xl border bg-slate-50 text-slate-800 border-slate-100 shadow-sm flex flex-col justify-between h-28"
-          >
+          <div className="p-4 rounded-2xl border bg-slate-50 text-slate-800 border-slate-100 shadow-sm flex flex-col justify-between h-28">
             <div className="flex justify-between items-start">
               <div className="w-8 h-8 rounded-full bg-white text-slate-700 shadow-sm flex items-center justify-center font-bold text-xs">
                 ℹ️
@@ -189,7 +176,6 @@ function App() {
           </div>
         </div>
 
-        {/* Today's Full Schedule */}
         <div className="space-y-2.5 pt-1">
           <div className="flex items-center justify-between px-1">
             <span className="text-xs font-extrabold uppercase tracking-wider text-slate-400">
@@ -242,7 +228,6 @@ function App() {
 
       </div>
 
-      {/* Modal */}
       <ScheduleModal
         operator={selectedOperator}
         isFriday={isFriday}
