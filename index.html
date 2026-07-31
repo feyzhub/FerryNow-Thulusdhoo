@@ -195,11 +195,11 @@
 
               <div className="space-y-2 bg-slate-50 p-3.5 rounded-2xl border border-slate-100 text-xs">
                 <div>
-                  <span className="text-slate-400 block text-[10px] uppercase font-bold mb-0.5">Hotline Contacts</span>
+                  <span className="text-slate-400 block text-[10px] uppercase font-bold mb-1">Hotline Contacts</span>
                   <div className="flex gap-2">
                     {operator.booking.map((phone, i) => (
-                      <a key={i} href={`tel:${phone}`} className="font-bold text-slate-800 bg-white px-2.5 py-1 rounded-lg border border-slate-200 hover:border-sky-500 transition-colors">
-                        📞 {phone}
+                      <a key={i} href={`tel:${phone}`} className="font-bold text-slate-800 bg-white px-3 py-1 rounded-lg border border-slate-200 hover:border-sky-500 transition-colors">
+                        {phone}
                       </a>
                     ))}
                   </div>
@@ -422,6 +422,7 @@
                 </button>
               </div>
 
+              {/* Cards Grid */}
               <div className="grid grid-cols-2 gap-3">
                 {FERRY_OPERATORS.map((op) => {
                   const isSelected = selectedOperator?.id === op.id;
@@ -440,11 +441,11 @@
                       }`}
                     >
                       <div className="flex justify-between items-start">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
-                          isSelected ? 'bg-slate-800 text-white' : 'bg-white text-slate-700 shadow-sm'
+                        <span className={`text-[10px] uppercase font-extrabold tracking-wider ${
+                          isSelected ? 'text-slate-400' : 'text-slate-400'
                         }`}>
-                          🚢
-                        </div>
+                          Operator
+                        </span>
                         <span className={`w-2.5 h-2.5 rounded-full ${hasUpcoming ? 'bg-sky-500' : 'bg-slate-300'}`}></span>
                       </div>
 
@@ -474,7 +475,7 @@
                 </div>
               </div>
 
-              {/* Dynamic Warning Banner */}
+              {/* Weather Schedule Notice */}
               {weather.isBadWeather && (
                 <div className="bg-amber-50 border border-amber-200/80 p-4 rounded-2xl text-amber-900 text-xs shadow-sm space-y-1">
                   <h5 className="font-extrabold text-amber-950 uppercase text-[10px] tracking-wider">
