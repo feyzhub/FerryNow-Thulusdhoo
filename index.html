@@ -1,12 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Thulusdhoo Ferry Schedule</title>
-  </head>
-  <body class="bg-gray-100 text-slate-800">
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thulusdhoo Ferry Schedule</title>
+
+  <!-- Tailwind CSS via CDN (No CSS import required) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- React & React DOM via CDN -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+  <!-- Babel to compile JSX directly in browser -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-[#f3f4f6] text-slate-800">
+  <div id="root"></div>
+
+  <!-- Entry Script -->
+  <script type="text/babel" data-type="module" src="./src/main.jsx"></script>
+</body>
 </html>
