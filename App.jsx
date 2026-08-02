@@ -49,7 +49,22 @@ export default function App() {
     return { ...item, status, isNext, style };
   });
 
-  const nextAvailableFerry = processedSchedule.find((item) => item.isNext);
+ const nextAvailableFerry = processedSchedule.find(
+  (item) => item.status !== "Departed"
+);
+
+const nextDepartureTime = nextAvailableFerry?.time24;
+
+const updatedSchedule = processedSchedule.map((item) => ({
+  ...item,
+  isNext: item.time24 === nextDepartureTime,
+  status:
+    item.status === "Departed"
+      ? "Departed"
+      : item.time24 === nextDepartureTime
+      ? "Next Ferry"
+      : "Upcoming"
+}));
 
   const countdownString = useMemo(() => {
     if (!nextAvailableFerry) return null;
