@@ -115,21 +115,6 @@
       }
     ];
 
-    const getDepartureStatus = (time24, nextFerryTracker, now) => {
-      const currentMinutes = now.getHours() * 60 + now.getMinutes();
-      const [hours, minutes] = time24.split(':').map(Number);
-      const itemMinutes = hours * 60 + minutes;
-
-      if (itemMinutes < currentMinutes) {
-        return { status: 'Departed', isNext: false, style: 'bg-slate-100 text-slate-400 border-slate-200' };
-      } else if (!nextFerryTracker.found) {
-        nextFerryTracker.found = true;
-        return { status: 'Next Ferry', isNext: true, style: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30 font-bold' };
-      } else {
-        return { status: 'Upcoming', isNext: false, style: 'bg-sky-50 text-sky-600 border-sky-200' };
-      }
-    };
-
     const decodeWeatherCode = (code) => {
       switch (code) {
         case 0: return { condition: 'Sunny', isBadWeather: false };
@@ -341,13 +326,39 @@
         return filtered.sort((a, b) => a.time24.localeCompare(b.time24));
       }, [activeRoute, isFriday]);
 
-      const nextFerryTracker = { found: false };
-      const processedSchedule = fullDailySchedule.map((item) => {
-        const { status, isNext, style } = getDepartureStatus(item.time24, nextFerryTracker, now);
-        return { ...item, status, isNext, style };
-      });
+      // Determine initial departure status per item
+      const processedSchedule = useMemo(() => {
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
-      const nextAvailableFerry = processedSchedule.find((item) => item.isNext);
+        return fullDailySchedule.map((item) => {
+          const [hours, minutes] = item.time24.split(':').map(Number);
+          const itemMinutes = hours * 60 + minutes;
+
+          if (itemMinutes < currentMinutes) {
+            return { ...item, status: 'Departed', isNext: false, style: 'bg-slate-100 text-slate-400 border-slate-200' };
+          }
+          return { ...item, status: 'Upcoming', isNext: false, style: 'bg-sky-50 text-sky-600 border-sky-200' };
+        });
+      }, [fullDailySchedule, now]);
+
+      // Identify the first upcoming departure time
+      const nextAvailableFerry = processedSchedule.find((item) => item.status !== "Departed");
+      const nextDepartureTime = nextAvailableFerry?.time24;
+
+      // Group all ferries leaving at `nextDepartureTime` into 'Next Ferry'
+      const updatedSchedule = processedSchedule.map((item) => {
+        if (item.status === 'Departed') return item;
+
+        const isNext = item.time24 === nextDepartureTime;
+        return {
+          ...item,
+          isNext,
+          status: isNext ? 'Next Ferry' : 'Upcoming',
+          style: isNext
+            ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30 font-bold'
+            : 'bg-sky-50 text-sky-600 border-sky-200'
+        };
+      });
 
       const countdownString = useMemo(() => {
         if (!nextAvailableFerry) return null;
@@ -390,7 +401,7 @@
                 </span>
 
                 <h3 className="text-sky-300 font-bold text-sm tracking-wide">
-                  {nextAvailableFerry ? nextAvailableFerry.operatorName : "No More Ferries Today"}
+                  {nextAvailableFerry ? `${nextAvailableFerry.departure} → ${nextAvailableFerry.destination}` : "No More Ferries Today"}
                 </h3>
 
                 <div className="text-5xl font-black tracking-tight text-white my-1">
@@ -429,7 +440,7 @@
               <div className="grid grid-cols-2 gap-3">
                 {FERRY_OPERATORS.map((op) => {
                   const isSelected = selectedOperator?.id === op.id;
-                  const hasUpcoming = processedSchedule.some(
+                  const hasUpcoming = updatedSchedule.some(
                     (s) => s.operatorId === op.id && s.status !== 'Departed'
                   );
 
@@ -496,13 +507,13 @@
                     Full Schedule Today
                   </span>
                   <span className="text-[11px] font-bold text-sky-600">
-                    {processedSchedule.length} Trips
+                    {updatedSchedule.length} Trips
                   </span>
                 </div>
 
                 <div className="space-y-2 max-h-60 overflow-y-auto pr-0.5">
-                  {processedSchedule.length > 0 ? (
-                    processedSchedule.map((item) => (
+                  {updatedSchedule.length > 0 ? (
+                    updatedSchedule.map((item) => (
                       <div
                         key={item.id}
                         className={`flex items-center justify-between p-3.5 rounded-2xl border transition-all ${
