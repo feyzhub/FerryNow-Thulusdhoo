@@ -491,9 +491,6 @@
               <div className="grid grid-cols-2 gap-3">
                 {FERRY_OPERATORS.map((op) => {
                   const isSelected = selectedOperator?.id === op.id;
-                  const hasUpcoming = displaySchedule.some(
-                    (s) => s.operatorId === op.id && s.status !== 'Departed'
-                  );
 
                   return (
                     <div
@@ -508,9 +505,7 @@
                       <div className="flex justify-between items-start mb-1">
                         <div></div>
                         <span
-                          className={`w-2.5 h-2.5 rounded-full ${op.dotColor} ${
-                            hasUpcoming ? "opacity-100" : "opacity-30"
-                          }`}
+                          className={`w-2.5 h-2.5 rounded-full ${op.dotColor}`}
                         ></span>
                       </div>
 
