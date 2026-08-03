@@ -26,6 +26,7 @@
       {
         id: "tharika",
         name: "Tharika Express",
+        shortName: "Tharika",
         dotColor: "bg-emerald-500",
         tag: "Speedboat",
         description: "Scheduled speedboat transfer between Malé & Thulusdhoo.",
@@ -58,7 +59,8 @@
       {
         id: "refcool",
         name: "Refcool Marine",
-        dotColor: "bg-blue-500",
+        shortName: "Refcool",
+        dotColor: "bg-sky-500",
         tag: "Express",
         description: "Fast passenger speedboat express.",
         booking: ["7316362", "7312050"],
@@ -91,7 +93,8 @@
       {
         id: "riverspeed",
         name: "River Speed",
-        dotColor: "bg-red-500",
+        shortName: "River Speed",
+        dotColor: "bg-rose-500",
         tag: "Atoll Express",
         description: "Atoll speedboat express transfers.",
         booking: ["9893434", "9143434"],
@@ -143,7 +146,7 @@
       }
     };
 
-    // --- MODAL COMPONENT ---
+    // --- OPERATOR DETAILS MODAL ---
     function ScheduleModal({ operator, isFriday, onClose }) {
       if (!operator) return null;
       const [filterRoute, setFilterRoute] = useState('ALL');
@@ -430,16 +433,34 @@
 
       return (
         <div className="bg-[#f3f4f6] min-h-screen flex justify-center items-start p-0 sm:p-6 font-sans">
-          <div className="w-full max-w-md bg-white sm:rounded-[36px] shadow-xl border border-slate-100 min-h-screen sm:min-h-[840px] p-5 sm:p-6 flex flex-col justify-between space-y-5 overflow-hidden">
+          <div className="w-full max-w-md bg-white sm:rounded-[36px] shadow-xl border border-slate-100 min-h-screen sm:min-h-[840px] p-5 sm:p-6 flex flex-col justify-between space-y-4 overflow-hidden">
             
-            <div className="space-y-5">
-              <div className="flex items-center justify-between pt-2 px-1">
-                <div>
-                  <h1 className="text-2xl font-black text-slate-900 tracking-tight">Hello</h1>
-                  <p className="text-xs font-semibold text-slate-400">{formattedDate} {isFridayToday && '• Friday'}</p>
+            <div className="space-y-4">
+              
+              {/* Header: Hello (Left) — Weather (Center) — Time/Date (Right) */}
+              <div className="flex items-center justify-between pt-1 px-1">
+                {/* Left: Greeting */}
+                <div className="flex-1">
+                  <h1 className="text-2xl font-black text-slate-900 tracking-tight leading-none">Hello</h1>
+                  <p className="text-[11px] font-semibold text-slate-400 mt-1">{formattedDate} {isFridayToday && '• Fri'}</p>
                 </div>
-                <div className="text-right bg-slate-50 border border-slate-100 px-3.5 py-1.5 rounded-2xl shadow-sm">
-                  <span className="text-sm font-black text-slate-800 tracking-wider font-mono">{formattedClock}</span>
+
+                {/* Center: Weather */}
+                <div className="flex-1 flex justify-center">
+                  <div className="bg-slate-50 border border-slate-100 px-3.5 py-1.5 rounded-2xl shadow-sm text-center">
+                    <span className="text-xs font-black text-slate-800">
+                      {weather.temp !== '--' ? `${weather.temp}°C` : '--'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Right: Clock */}
+                <div className="flex-1 flex justify-end">
+                  <div className="bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-2xl shadow-sm text-center">
+                    <span className="text-xs font-black text-slate-800 tracking-wider font-mono">
+                      {formattedClock}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -450,7 +471,7 @@
                 </span>
 
                 <h3 className="text-sky-300 font-bold text-sm tracking-wide">
-                  {nextAvailableFerry ? `${nextAvailableFerry.departure} → ${nextAvailableFerry.destination}` : "No Service Available"}
+                  {nextAvailableFerry ? `${nextAvailableFerry.operatorName} • ${nextAvailableFerry.departure} → ${nextAvailableFerry.destination}` : "No Service Available"}
                 </h3>
 
                 <div className="text-5xl font-black tracking-tight text-white my-1 flex items-baseline justify-center gap-2">
@@ -467,11 +488,31 @@
                 </div>
               </div>
 
+              {/* Single Row Horizontal Operators Toolbar */}
+              <div className="bg-slate-50 rounded-2xl border border-slate-100 p-1.5 shadow-sm flex items-center justify-between">
+                {FERRY_OPERATORS.map((op, idx) => (
+                  <React.Fragment key={op.id}>
+                    <button
+                      onClick={() => setSelectedOperator(op)}
+                      className="flex-1 flex items-center justify-center gap-2 py-2 px-1 rounded-xl hover:bg-slate-200/60 active:bg-slate-200 transition-all group"
+                    >
+                      <span className={`w-2.5 h-2.5 rounded-full ${op.dotColor} shadow-sm transition-transform group-hover:scale-125`}></span>
+                      <span className="text-xs font-extrabold text-slate-700 group-hover:text-slate-900 tracking-tight">
+                        {op.shortName}
+                      </span>
+                    </button>
+                    {idx < FERRY_OPERATORS.length - 1 && (
+                      <div className="h-4 w-px bg-slate-200/80"></div>
+                    )}
+                  </React.Fragment>
+                ))}
+              </div>
+
               {/* Route Switcher */}
               <div className="bg-slate-100 p-1 rounded-2xl flex gap-1 border border-slate-200/60">
                 <button
                   onClick={() => setActiveRoute('MALE_TO_THULUSDHOO')}
-                  className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all ${
+                  className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all ${
                     activeRoute === 'MALE_TO_THULUSDHOO'
                       ? 'bg-white text-slate-900 shadow-md'
                       : 'text-slate-500 hover:text-slate-800'
@@ -481,7 +522,7 @@
                 </button>
                 <button
                   onClick={() => setActiveRoute('THULUSDHOO_TO_MALE')}
-                  className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all ${
+                  className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all ${
                     activeRoute === 'THULUSDHOO_TO_MALE'
                       ? 'bg-white text-slate-900 shadow-md'
                       : 'text-slate-500 hover:text-slate-800'
@@ -491,84 +532,36 @@
                 </button>
               </div>
 
-              {/* Compact Cards Grid */}
-              <div className="grid grid-cols-2 gap-3">
-                {FERRY_OPERATORS.map((op) => {
-                  const isSelected = selectedOperator?.id === op.id;
-
-                  return (
-                    <div
-                      key={op.id}
-                      onClick={() => setSelectedOperator(op)}
-                      className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between h-20 relative ${
-                        isSelected
-                          ? 'bg-slate-900 text-white border-slate-900 shadow-lg scale-[1.02]'
-                          : 'bg-slate-50 hover:bg-slate-100/80 text-slate-800 border-slate-100 shadow-sm'
-                      }`}
-                    >
-                      <div className="flex justify-between items-start mb-1">
-                        <div></div>
-                        <span
-                          className={`w-2.5 h-2.5 rounded-full ${op.dotColor}`}
-                        ></span>
-                      </div>
-
-                      <div className="flex-1 flex flex-col justify-end">
-                        <h4 className="font-extrabold text-[15px] leading-tight">
-                          {op.name}
-                        </h4>
-                        <p
-                          className={`text-xs mt-0.5 ${
-                            isSelected ? "text-slate-400" : "text-slate-500"
-                          }`}
-                        >
-                          {op.fareOneWay}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-
-                {/* Compact Weather Card */}
-                <div className="p-3.5 rounded-2xl border bg-slate-50 text-slate-800 border-slate-100 shadow-sm flex flex-col justify-center h-20">
-                  <h4 className="font-extrabold text-[15px] leading-tight">
-                    {weather.condition}
-                  </h4>
-                  <p className="text-2xl font-black mt-0.5 font-mono">
-                    {weather.temp}{weather.temp !== '--' ? '°C' : ''}
-                  </p>
-                </div>
-              </div>
-
-              {/* Weather Notice */}
+              {/* Weather Notice (Conditional) */}
               {weather.isBadWeather && (
-                <div className="bg-amber-50 border border-amber-200/80 p-4 rounded-2xl text-amber-900 text-xs shadow-sm space-y-1">
+                <div className="bg-amber-50 border border-amber-200/80 p-3 rounded-2xl text-amber-900 text-xs shadow-sm space-y-0.5">
                   <h5 className="font-extrabold text-amber-950 uppercase text-[10px] tracking-wider">
                     Schedule Notice
                   </h5>
-                  <p className="font-medium text-amber-900/90 leading-relaxed">
-                    Ferry schedules may change due to weather conditions. Please contact the ferry operators for the latest information.
+                  <p className="font-medium text-amber-900/90 leading-relaxed text-[11px]">
+                    Ferry schedules may change due to weather conditions. Contact operators to verify.
                   </p>
                 </div>
               )}
 
               {/* Schedule Listing */}
-              <div className="space-y-2.5 pt-1">
+              <div className="space-y-2 pt-1">
                 <div className="flex items-center justify-between px-1">
-                  <span className="text-xs font-extrabold uppercase tracking-wider text-slate-400">
-                    Schedule List
+                  <span className="text-xs font-black uppercase tracking-wider text-slate-400">
+                    Full Schedule Today
                   </span>
                   <span className="text-[11px] font-bold text-sky-600">
                     {displaySchedule.filter(i => i.type !== 'header').length} Trips
                   </span>
                 </div>
 
-                <div className="space-y-2 max-h-64 overflow-y-auto pr-0.5">
+                {/* Expanded Scrollable Schedule Container */}
+                <div className="space-y-2 max-h-[340px] overflow-y-auto pr-0.5">
                   {displaySchedule.length > 0 ? (
                     displaySchedule.map((item) => {
                       if (item.type === 'header') {
                         return (
-                          <div key={item.id} className="py-2.5 flex items-center gap-3">
+                          <div key={item.id} className="py-2 flex items-center gap-3">
                             <div className="h-px bg-slate-200 flex-1"></div>
                             <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
                               {item.title}
@@ -619,18 +612,17 @@
 
             </div>
 
+            {/* Operator Details Modal */}
             <ScheduleModal
               operator={selectedOperator}
               isFriday={isFridayToday}
               onClose={() => setSelectedOperator(null)}
             />
-
           </div>
         </div>
       );
     }
 
-    // MOUNT TO ROOT
     const root = ReactDOM.createRoot(document.getElementById('root'));
     root.render(<App />);
   </script>
