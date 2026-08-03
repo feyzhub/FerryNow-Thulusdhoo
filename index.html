@@ -149,6 +149,28 @@
       }
     ];
 
+    const SUPPLY_FERRIES = [
+      {
+        id: "tharika2",
+        name: "Tharika 2",
+        tag: "Cargo / Supply",
+        days: ["Sunday", "Monday", "Wednesday", "Thursday", "Saturday"],
+        thulusdhooTime: "08:00",
+        maleTime: "14:30",
+        contacts: ["7761077"],
+        liveTrackingUrl: "https://m.followme.mv/public/?id=17852"
+      },
+      {
+        id: "alirasthaa",
+        name: "Ali Rasthaa",
+        tag: "Cargo / Supply",
+        days: ["Sunday", "Monday", "Wednesday", "Saturday"],
+        thulusdhooTime: "05:30",
+        maleTime: "14:30",
+        contacts: ["7359807", "7748865"]
+      }
+    ];
+
     const decodeWeatherCode = (code) => {
       switch (code) {
         case 0: return { condition: 'Sunny', isBadWeather: false, type: 'sunny' };
@@ -203,11 +225,123 @@
         );
       }
 
-      // Default / Cloudy
       return (
         <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-25">
           <div className="absolute -top-4 -left-10 w-48 h-20 bg-slate-400/30 rounded-full blur-xl animate-cloud"></div>
           <div className="absolute bottom-0 right-0 w-56 h-24 bg-sky-500/20 rounded-full blur-2xl animate-cloud" style={{ animationDuration: '22s' }}></div>
+        </div>
+      );
+    }
+
+    // --- SUPPLY FERRY MODAL ---
+    function SupplyModal({ ferry, onClose }) {
+      if (!ferry) return null;
+
+      return (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm transition-opacity">
+          <div className="relative w-full max-w-md bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden text-slate-800 border border-slate-100 max-h-[85vh] flex flex-col">
+            <div className="p-5 border-b border-slate-100 bg-amber-50/50 flex items-start justify-between">
+              <div>
+                <span className="text-[10px] uppercase font-bold tracking-wider text-amber-700 bg-amber-100 px-2.5 py-0.5 rounded-full">
+                  {ferry.tag}
+                </span>
+                <h2 className="text-xl font-black text-slate-900 mt-1">{ferry.name}</h2>
+                <p className="text-xs text-slate-500 mt-0.5">Regular Supply & Cargo Vessel Schedule</p>
+              </div>
+              <button
+                onClick={onClose}
+                className="w-8 h-8 rounded-full bg-slate-200/60 flex items-center justify-center text-slate-500 hover:text-slate-800 transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-5 overflow-y-auto space-y-4">
+              
+              {/* FollowMe Live Tracking Button (if available) */}
+              {ferry.liveTrackingUrl && (
+                <a
+                  href={ferry.liveTrackingUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center justify-between p-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl shadow-md transition-colors"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <span className="relative flex h-3 w-3">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-300 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
+                    </span>
+                    <div>
+                      <span className="text-xs font-black uppercase tracking-wider block leading-none">Track Live Location</span>
+                      <span className="text-[10px] text-emerald-100 font-medium">FollowMe.mv Marine GPS</span>
+                    </div>
+                  </div>
+                  <span className="text-xs font-bold bg-white/20 px-2.5 py-1 rounded-lg">View ↗</span>
+                </a>
+              )}
+
+              <div>
+                <span className="text-slate-400 block text-[10px] uppercase font-bold mb-2">Operating Days</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((day) => {
+                    const isActive = ferry.days.includes(day);
+                    return (
+                      <span
+                        key={day}
+                        className={`text-xs px-2.5 py-1 rounded-lg font-bold border ${
+                          isActive
+                            ? 'bg-amber-500 text-white border-amber-500 shadow-sm'
+                            : 'bg-slate-50 text-slate-300 border-slate-100 line-through'
+                        }`}
+                      >
+                        {day.slice(0, 3)}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <span className="text-slate-400 block text-[10px] uppercase font-bold">Departure Times</span>
+                
+                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-100">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">From Thulusdhoo</span>
+                    <p className="text-xs font-semibold text-slate-600">Morning Departure</p>
+                  </div>
+                  <span className="text-base font-black text-slate-900 font-mono">{ferry.thulusdhooTime}</span>
+                </div>
+
+                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-100">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">From Malé</span>
+                    <p className="text-xs font-semibold text-slate-600">Afternoon Return</p>
+                  </div>
+                  <span className="text-base font-black text-slate-900 font-mono">{ferry.maleTime}</span>
+                </div>
+              </div>
+
+              <div className="space-y-2 bg-slate-50 p-3.5 rounded-2xl border border-slate-100 text-xs">
+                <span className="text-slate-400 block text-[10px] uppercase font-bold mb-1">Contact Numbers</span>
+                <div className="flex flex-wrap gap-2">
+                  {ferry.contacts.map((phone, i) => (
+                    <a key={i} href={`tel:${phone}`} className="font-bold text-slate-800 bg-white px-3 py-1.5 rounded-xl border border-slate-200 hover:border-amber-500 transition-colors shadow-sm">
+                      📞 {phone}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 bg-slate-50 border-t border-slate-100 text-right">
+              <button
+                onClick={onClose}
+                className="w-full py-2.5 text-xs font-bold text-white bg-slate-900 rounded-xl hover:bg-slate-800 transition-colors shadow-sm"
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       );
     }
@@ -331,6 +465,7 @@
     // --- MAIN APP COMPONENT ---
     function App() {
       const [selectedOperator, setSelectedOperator] = useState(null);
+      const [selectedSupplyFerry, setSelectedSupplyFerry] = useState(null);
       const [activeRoute, setActiveRoute] = useState('MALE_TO_THULUSDHOO');
       const [now, setNow] = useState(new Date());
 
@@ -627,7 +762,7 @@
                 </div>
 
                 {/* Expanded Scrollable Schedule Container */}
-                <div className="space-y-2 max-h-[340px] overflow-y-auto pr-0.5">
+                <div className="space-y-2 max-h-[260px] overflow-y-auto pr-0.5">
                   {displaySchedule.length > 0 ? (
                     displaySchedule.map((item) => {
                       if (item.type === 'header') {
@@ -681,6 +816,42 @@
                 </div>
               </div>
 
+              {/* Supply Ferries Section */}
+              <div className="pt-2 border-t border-slate-100 space-y-2">
+                <span className="text-xs font-black uppercase tracking-wider text-slate-400 px-1 block">
+                  Supply Ferries
+                </span>
+                <div className="grid grid-cols-2 gap-2.5">
+                  {SUPPLY_FERRIES.map((ferry) => (
+                    <button
+                      key={ferry.id}
+                      onClick={() => setSelectedSupplyFerry(ferry)}
+                      className="p-3 bg-amber-50/60 hover:bg-amber-100/60 border border-amber-200/80 rounded-2xl text-left transition-all group flex flex-col justify-between"
+                    >
+                      <div className="flex items-center justify-between w-full mb-1">
+                        <span className="text-xs font-black text-slate-900 group-hover:text-amber-900">
+                          {ferry.name}
+                        </span>
+                        <div className="flex items-center gap-1">
+                          {ferry.liveTrackingUrl && (
+                            <span className="text-[9px] font-extrabold uppercase text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded-md flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                              GPS
+                            </span>
+                          )}
+                          <span className="text-[9px] font-extrabold uppercase text-amber-700 bg-amber-200/60 px-1.5 py-0.5 rounded-md">
+                            Cargo
+                          </span>
+                        </div>
+                      </div>
+                      <p className="text-[10px] font-semibold text-amber-800/80">
+                        Thulusdhoo: {ferry.thulusdhooTime} | Malé: {ferry.maleTime}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
             </div>
 
             {/* Operator Details Modal */}
@@ -688,6 +859,12 @@
               operator={selectedOperator}
               isFriday={isFridayToday}
               onClose={() => setSelectedOperator(null)}
+            />
+
+            {/* Supply Ferry Details Modal */}
+            <SupplyModal
+              ferry={selectedSupplyFerry}
+              onClose={() => setSelectedSupplyFerry(null)}
             />
           </div>
         </div>
