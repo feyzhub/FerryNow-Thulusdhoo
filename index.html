@@ -14,6 +14,33 @@
 
   <!-- Babel Compiler -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Custom CSS for Weather Animations -->
+  <style>
+    @keyframes rain {
+      0% { transform: translateY(-100%) translateX(0); opacity: 0; }
+      50% { opacity: 0.6; }
+      100% { transform: translateY(200%) translateX(-20px); opacity: 0; }
+    }
+    @keyframes cloudDrift {
+      0% { transform: translateX(-20%); }
+      50% { transform: translateX(20%); }
+      100% { transform: translateX(-20%); }
+    }
+    @keyframes sunGlow {
+      0%, 100% { opacity: 0.2; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.1); }
+    }
+    .animate-rain {
+      animation: rain 1.2s linear infinite;
+    }
+    .animate-cloud {
+      animation: cloudDrift 16s ease-in-out infinite;
+    }
+    .animate-sun {
+      animation: sunGlow 4s ease-in-out infinite;
+    }
+  </style>
 </head>
 <body class="bg-[#f3f4f6] text-slate-800">
   <div id="root"></div>
@@ -124,27 +151,66 @@
 
     const decodeWeatherCode = (code) => {
       switch (code) {
-        case 0: return { condition: 'Sunny', isBadWeather: false };
+        case 0: return { condition: 'Sunny', isBadWeather: false, type: 'sunny' };
         case 1:
         case 2:
-        case 3: return { condition: 'Partly Cloudy', isBadWeather: false };
+        case 3: return { condition: 'Partly Cloudy', isBadWeather: false, type: 'cloudy' };
         case 45:
-        case 48: return { condition: 'Foggy', isBadWeather: false };
+        case 48: return { condition: 'Foggy', isBadWeather: false, type: 'cloudy' };
         case 51:
         case 53:
-        case 55: return { condition: 'Drizzle', isBadWeather: true };
+        case 55: return { condition: 'Drizzle', isBadWeather: true, type: 'rain' };
         case 61:
         case 63:
-        case 65: return { condition: 'Rain', isBadWeather: true };
+        case 65: return { condition: 'Rain', isBadWeather: true, type: 'rain' };
         case 80:
         case 81:
-        case 82: return { condition: 'Showers', isBadWeather: true };
+        case 82: return { condition: 'Showers', isBadWeather: true, type: 'rain' };
         case 95:
         case 96:
-        case 99: return { condition: 'Thunderstorm', isBadWeather: true };
-        default: return { condition: 'Cloudy', isBadWeather: false };
+        case 99: return { condition: 'Thunderstorm', isBadWeather: true, type: 'rain' };
+        default: return { condition: 'Cloudy', isBadWeather: false, type: 'cloudy' };
       }
     };
+
+    // --- ANIMATED WEATHER BACKGROUND FOR CARD ---
+    function WeatherBackground({ weatherType }) {
+      if (weatherType === 'rain') {
+        return (
+          <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-30">
+            {[...Array(12)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute bg-sky-300 w-[1px] h-6 rounded-full animate-rain"
+                style={{
+                  left: `${(i * 8.5) + 2}%`,
+                  top: `-${Math.random() * 20}%`,
+                  animationDuration: `${0.8 + Math.random() * 0.6}s`,
+                  animationDelay: `${Math.random() * 1.5}s`
+                }}
+              ></div>
+            ))}
+          </div>
+        );
+      }
+
+      if (weatherType === 'sunny') {
+        return (
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            <div className="absolute -top-12 -right-12 w-40 h-40 bg-amber-400/20 rounded-full blur-2xl animate-sun"></div>
+            <div className="absolute top-1/2 left-1/4 w-20 h-20 bg-sky-400/10 rounded-full blur-xl animate-sun" style={{ animationDelay: '2s' }}></div>
+          </div>
+        );
+      }
+
+      // Default / Cloudy
+      return (
+        <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-25">
+          <div className="absolute -top-4 -left-10 w-48 h-20 bg-slate-400/30 rounded-full blur-xl animate-cloud"></div>
+          <div className="absolute bottom-0 right-0 w-56 h-24 bg-sky-500/20 rounded-full blur-2xl animate-cloud" style={{ animationDuration: '22s' }}></div>
+        </div>
+      );
+    }
 
     // --- OPERATOR DETAILS MODAL ---
     function ScheduleModal({ operator, isFriday, onClose }) {
@@ -271,7 +337,8 @@
       const [weather, setWeather] = useState({
         temp: '--',
         condition: 'Loading...',
-        isBadWeather: false
+        isBadWeather: false,
+        type: 'cloudy'
       });
 
       useEffect(() => {
@@ -288,12 +355,12 @@
             const data = await response.json();
             if (data && data.current) {
               const temp = Math.round(data.current.temperature_2m);
-              const { condition, isBadWeather } = decodeWeatherCode(data.current.weather_code);
-              setWeather({ temp: `${temp}`, condition, isBadWeather });
+              const { condition, isBadWeather, type } = decodeWeatherCode(data.current.weather_code);
+              setWeather({ temp: `${temp}`, condition, isBadWeather, type });
             }
           } catch (error) {
             console.error('Weather fetch error:', error);
-            setWeather({ temp: '--', condition: 'Unavailable', isBadWeather: false });
+            setWeather({ temp: '--', condition: 'Unavailable', isBadWeather: false, type: 'cloudy' });
           }
         };
 
@@ -464,17 +531,21 @@
                 </div>
               </div>
 
-              {/* Next Available Ferry Card */}
+              {/* Next Available Ferry Card with Weather Animation */}
               <div className="bg-[#0b1329] text-white p-6 rounded-3xl shadow-xl relative overflow-hidden flex flex-col items-center justify-center text-center min-h-[160px] border border-slate-800">
-                <span className="px-3 py-1 rounded-full bg-sky-500/10 border border-sky-400/30 text-sky-400 text-[10px] font-extrabold tracking-widest uppercase mb-2">
+                
+                {/* Weather Background Component */}
+                <WeatherBackground weatherType={weather.type} />
+
+                <span className="relative z-10 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-400/30 text-sky-400 text-[10px] font-extrabold tracking-widest uppercase mb-2">
                   NEXT AVAILABLE FERRY
                 </span>
 
-                <h3 className="text-sky-300 font-bold text-sm tracking-wide">
+                <h3 className="relative z-10 text-sky-300 font-bold text-sm tracking-wide">
                   {nextAvailableFerry ? `${nextAvailableFerry.operatorName} • ${nextAvailableFerry.departure} → ${nextAvailableFerry.destination}` : "No Service Available"}
                 </h3>
 
-                <div className="text-5xl font-black tracking-tight text-white my-1 flex items-baseline justify-center gap-2">
+                <div className="relative z-10 text-5xl font-black tracking-tight text-white my-1 flex items-baseline justify-center gap-2">
                   <span>{nextAvailableFerry ? nextAvailableFerry.time : "--:--"}</span>
                   {nextAvailableFerry?.isTomorrow && (
                     <span className="text-xs font-bold text-amber-400 uppercase tracking-wider bg-amber-400/10 border border-amber-400/30 px-2 py-0.5 rounded-md">
@@ -483,7 +554,7 @@
                   )}
                 </div>
 
-                <div className="mt-2 inline-flex items-center px-3.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-semibold">
+                <div className="relative z-10 mt-2 inline-flex items-center px-3.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-semibold">
                   {countdownString || "Service Unavailable"}
                 </div>
               </div>
