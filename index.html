@@ -31,15 +31,9 @@
       0%, 100% { opacity: 0.2; transform: scale(1); }
       50% { opacity: 0.4; transform: scale(1.1); }
     }
-    .animate-rain {
-      animation: rain 1.2s linear infinite;
-    }
-    .animate-cloud {
-      animation: cloudDrift 16s ease-in-out infinite;
-    }
-    .animate-sun {
-      animation: sunGlow 4s ease-in-out infinite;
-    }
+    .animate-rain { animation: rain 1.2s linear infinite; }
+    .animate-cloud { animation: cloudDrift 16s ease-in-out infinite; }
+    .animate-sun { animation: sunGlow 4s ease-in-out infinite; }
   </style>
 </head>
 <body class="bg-[#f3f4f6] text-slate-800">
@@ -48,7 +42,7 @@
   <script type="text/babel">
     const { useState, useEffect, useMemo } = React;
 
-    // --- DATA & HELPERS ---
+    // --- OPERATOR DATA WITH LIVE TRACKERS ---
     const FERRY_OPERATORS = [
       {
         id: "tharika",
@@ -60,7 +54,6 @@
         booking: ["7810052", "7810078"],
         fareOneWay: "MVR 175",
         fareRoundTrip: "MVR 300",
-        // Fleet configurations with active state flag
         vessels: [
           { name: "Tharika 1", trackingUrl: "https://m.followme.mv/public/?id=19122", isActive: true },
           { name: "Tharika 5", trackingUrl: "https://m.followme.mv/public/?id=19093", isActive: false }
@@ -99,6 +92,10 @@
         website: "refcoolmarine.mv",
         fareOneWay: "MVR 175",
         fareRoundTrip: "MVR 300",
+        vessels: [
+          { name: "Refcool 1", trackingUrl: "https://m.followme.mv/public/14166", isActive: true },
+          { name: "Refcool 2", trackingUrl: "https://m.followme.mv/public/14204", isActive: false }
+        ],
         regularSchedule: [
           { id: "r1", time: "09:15", time24: "09:15", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
           { id: "r2", time: "12:30", time24: "12:30", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
@@ -133,6 +130,10 @@
         email: "riverspeed3434@gmail.com",
         fareOneWay: "MVR 175",
         fareRoundTrip: "MVR 300",
+        vessels: [
+          { name: "River Speed 1", trackingUrl: "https://m.followme.mv/public/11334", isActive: true },
+          { name: "River Speed 2", trackingUrl: "https://m.followme.mv/public/8739", isActive: false }
+        ],
         regularSchedule: [
           { id: "rv1", time: "09:20", time24: "09:20", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
           { id: "rv2", time: "12:20", time24: "12:20", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
@@ -201,7 +202,6 @@
       }
     };
 
-    // --- ANIMATED WEATHER BACKGROUND FOR CARD ---
     function WeatherBackground({ weatherType }) {
       if (weatherType === 'rain') {
         return (
@@ -239,7 +239,6 @@
       );
     }
 
-    // --- SUPPLY FERRY MODAL ---
     function SupplyModal({ ferry, onClose }) {
       if (!ferry) return null;
 
@@ -349,12 +348,10 @@
       );
     }
 
-    // --- OPERATOR DETAILS MODAL ---
     function ScheduleModal({ operator, isFriday, onClose }) {
       if (!operator) return null;
       const [filterRoute, setFilterRoute] = useState('ALL');
       const rawSchedule = isFriday ? operator.fridaySchedule : operator.regularSchedule;
-
       const activeVessel = operator.vessels?.find(v => v.isActive);
 
       const modalSchedule = useMemo(() => {
@@ -383,7 +380,6 @@
 
             <div className="p-5 overflow-y-auto space-y-4">
               
-              {/* Active Vessel Tracking Banner */}
               {activeVessel && (
                 <a
                   href={activeVessel.trackingUrl}
@@ -492,7 +488,6 @@
       );
     }
 
-    // --- MAIN APP COMPONENT ---
     function App() {
       const [selectedOperator, setSelectedOperator] = useState(null);
       const [selectedSupplyFerry, setSelectedSupplyFerry] = useState(null);
@@ -713,9 +708,9 @@
                 </div>
               </div>
 
-              {/* Single Row Horizontal Operators Toolbar with Active Vessel Status */}
+              {/* Operators Cards with Live Vessel Buttons */}
               <div className="bg-slate-50 rounded-2xl border border-slate-100 p-2 shadow-sm space-y-1.5">
-                {FERRY_OPERATORS.map((op, idx) => {
+                {FERRY_OPERATORS.map((op) => {
                   const activeVessel = op.vessels?.find((v) => v.isActive);
 
                   return (
@@ -906,14 +901,14 @@
 
             </div>
 
-            {/* Operator Details Modal */}
+            {/* Operator Modal */}
             <ScheduleModal
               operator={selectedOperator}
               isFriday={isFridayToday}
               onClose={() => setSelectedOperator(null)}
             />
 
-            {/* Supply Ferry Details Modal */}
+            {/* Supply Ferry Modal */}
             <SupplyModal
               ferry={selectedSupplyFerry}
               onClose={() => setSelectedSupplyFerry(null)}
