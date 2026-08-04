@@ -1,334 +1,212 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { FERRY_OPERATORS, getDepartureStatus } from './ferryData.js';
-import ScheduleModal from './ScheduleModal.jsx';
+import React, { useState } from "react";
 
-// Helper to map WMO Weather Codes from Open-Meteo to readable text and warning status
-const decodeWeatherCode = (code) => {
-  // WMO Codes: https://open-meteo.com/en/docs
-  switch (code) {
-    case 0:
-      return { condition: 'Clear', isBadWeather: false };
-    case 1:
-    case 2:
-    case 3:
-      return { condition: 'Partly Cloudy', isBadWeather: false };
-    case 45:
-    case 48:
-      return { condition: 'Foggy', isBadWeather: false };
-    case 51:
-    case 53:
-    case 55:
-      return { condition: 'Drizzle', isBadWeather: true };
-    case 61:
-    case 63:
-    case 65:
-      return { condition: 'Rain', isBadWeather: true };
-    case 80:
-    case 81:
-    case 82:
-      return { condition: 'Showers', isBadWeather: true };
-    case 95:
-    case 96:
-    case 99:
-      return { condition: 'Thunderstorm', isBadWeather: true };
-    default:
-      return { condition: 'Cloudy', isBadWeather: false };
+const FERRY_OPERATORS = [
+  {
+    id: "tharika",
+    name: "Tharika Express",
+    shortName: "Tharika",
+    vesselName: "Tharika 1",
+    dotColor: "bg-emerald-500",
+    tag: "Speedboat",
+    description: "Scheduled speedboat transfer between Malé & Thulusdhoo.",
+    booking: ["7810052", "7810078"],
+    fareOneWay: "MVR 175",
+    fareRoundTrip: "MVR 300",
+    liveTrackingUrl: "https://m.followme.mv/public/?id=19122",
+    regularSchedule: [
+      { id: "t1", time: "09:15", time24: "09:15", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+      { id: "t2", time: "12:15", time24: "12:15", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+      { id: "t3", time: "16:00", time24: "16:00", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+      { id: "t4", time: "18:30", time24: "18:30", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+      { id: "t5", time: "22:15", time24: "22:15", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+      { id: "t6", time: "08:00", time24: "08:00", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+      { id: "t7", time: "10:15", time24: "10:15", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+      { id: "t8", time: "14:15", time24: "14:15", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+      { id: "t9", time: "17:00", time24: "17:00", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+      { id: "t10", time: "20:00", time24: "20:00", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+    ],
+    fridaySchedule: [
+      { id: "tf1", time: "09:15", time24: "09:15", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+      { id: "tf2", time: "16:00", time24: "16:00", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+      { id: "tf3", time: "18:30", time24: "18:30", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+      { id: "tf4", time: "22:15", time24: "22:15", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+      { id: "tf5", time: "08:00", time24: "08:00", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+      { id: "tf6", time: "14:30", time24: "14:30", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+      { id: "tf7", time: "17:00", time24: "17:00", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+      { id: "tf8", time: "20:00", time24: "20:00", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+    ]
+  },
+  {
+    id: "refcool",
+    name: "Refcool Marine",
+    shortName: "Refcool",
+    vesselName: "Refcool Express",
+    dotColor: "bg-sky-500",
+    tag: "Express",
+    description: "Fast passenger speedboat express.",
+    booking: ["7316362", "7312050"],
+    website: "refcoolmarine.mv",
+    fareOneWay: "MVR 175",
+    fareRoundTrip: "MVR 300",
+    liveTrackingUrl: "https://m.followme.mv/public/?id=REFCOOL_ID",
+    regularSchedule: [
+      { id: "r1", time: "09:15", time24: "09:15", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+      { id: "r2", time: "12:30", time24: "12:30", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+      { id: "r3", time: "15:30", time24: "15:30", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+      { id: "r4", time: "18:30", time24: "18:30", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+      { id: "r5", time: "22:00", time24: "22:00", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+      { id: "r6", time: "08:00", time24: "08:00", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+      { id: "r7", time: "11:00", time24: "11:00", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+      { id: "r8", time: "14:30", time24: "14:30", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+      { id: "r9", time: "17:30", time24: "17:30", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+      { id: "r10", time: "20:30", time24: "20:30", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+    ],
+    fridaySchedule: [
+      { id: "rf1", time: "09:15", time24: "09:15", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+      { id: "rf2", time: "15:30", time24: "15:30", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+      { id: "rf3", time: "18:30", time24: "18:30", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+      { id: "rf4", time: "22:00", time24: "22:00", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+      { id: "rf5", time: "08:00", time24: "08:00", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+      { id: "rf6", time: "14:30", time24: "14:30", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+      { id: "rf7", time: "17:00", time24: "17:00", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+      { id: "rf8", time: "20:00", time24: "20:00", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+    ]
+  },
+  {
+    id: "riverspeed",
+    name: "River Speed",
+    shortName: "River Speed",
+    vesselName: "River Speed 1",
+    dotColor: "bg-rose-500",
+    tag: "Atoll Express",
+    description: "Atoll speedboat express transfers.",
+    booking: ["9893434", "9143434"],
+    email: "riverspeed3434@gmail.com",
+    fareOneWay: "MVR 175",
+    fareRoundTrip: "MVR 300",
+    liveTrackingUrl: "https://m.followme.mv/public/?id=RIVERSPEED_ID",
+    regularSchedule: [
+      { id: "rv1", time: "09:20", time24: "09:20", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+      { id: "rv2", time: "12:20", time24: "12:20", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+      { id: "rv3", time: "16:20", time24: "16:20", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+      { id: "rv4", time: "20:20", time24: "20:20", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+      { id: "rv5", time: "22:15", time24: "22:15", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+      { id: "rv6", time: "08:00", time24: "08:00", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+      { id: "rv7", time: "10:30", time24: "10:30", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+      { id: "rv8", time: "14:30", time24: "14:30", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+      { id: "rv9", time: "18:30", time24: "18:30", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+    ],
+    fridaySchedule: [
+      { id: "rvf1", time: "09:30", time24: "09:30", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+      { id: "rvf2", time: "15:00", time24: "15:00", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+      { id: "rvf3", time: "21:00", time24: "21:00", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+      { id: "rvf4", time: "08:00", time24: "08:00", route: "THULUSDHOO_TO_MALE", departure: "Malé", destination: "Thulusdhoo" },
+      { id: "rvf5", time: "14:00", time24: "14:00", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+    ]
   }
-};
+];
 
-export default function App() {
-  const [selectedOperator, setSelectedOperator] = useState(null);
-  const [activeRoute, setActiveRoute] = useState('MALE_TO_THULUSDHOO');
-  const [now, setNow] = useState(new Date());
+export default function FerryTracker() {
+  const [selectedOperator, setSelectedOperator] = useState(FERRY_OPERATORS[0]);
+  const [isFriday, setIsFriday] = useState(false);
 
-  // Weather state
-  const [weather, setWeather] = useState({
-    temp: '--',
-    condition: 'Loading...',
-    isBadWeather: false
-  });
-
-  // Live Clock
-  useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  // Fetch Live Weather for Thulusdhoo from Open-Meteo
-  useEffect(() => {
-    const fetchWeather = async () => {
-      try {
-        const response = await fetch(
-          'https://api.open-meteo.com/v1/forecast?latitude=4.373&longitude=73.651&current=temperature_2m,weather_code,wind_speed_10m'
-        );
-        const data = await response.json();
-        
-        if (data && data.current) {
-          const temp = Math.round(data.current.temperature_2m);
-          const weatherCode = data.current.weather_code;
-          const { condition, isBadWeather } = decodeWeatherCode(weatherCode);
-
-          setWeather({
-            temp: `${temp}°C`,
-            condition: condition,
-            isBadWeather: isBadWeather
-          });
-        }
-      } catch (error) {
-        console.error('Failed to fetch weather data:', error);
-        setWeather({ temp: '--', condition: 'Unavailable', isBadWeather: false });
-      }
-    };
-
-    fetchWeather();
-    // Refresh weather every 15 minutes
-    const weatherTimer = setInterval(fetchWeather, 15 * 60 * 1000);
-    return () => clearInterval(weatherTimer);
-  }, []);
-
-  const isFriday = now.getDay() === 5;
-
-  const formattedClock = now.toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false
-  });
-
-  const formattedDate = now.toLocaleDateString('en-US', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric'
-  });
-
-  const fullDailySchedule = useMemo(() => {
-    let trips = [];
-    FERRY_OPERATORS.forEach((operator) => {
-      const scheduleList = isFriday ? operator.fridaySchedule : operator.regularSchedule;
-      scheduleList.forEach((trip) => {
-        trips.push({
-          ...trip,
-          operatorName: operator.name,
-          operatorId: operator.id
-        });
-      });
-    });
-
-    const filtered = trips.filter((t) => t.route === activeRoute);
-    return filtered.sort((a, b) => a.time24.localeCompare(b.time24));
-  }, [activeRoute, isFriday]);
-
-  const nextFerryTracker = { found: false };
-  const processedSchedule = fullDailySchedule.map((item) => {
-    const { status, isNext, style } = getDepartureStatus(item.time24, nextFerryTracker, now);
-    return { ...item, status, isNext, style };
-  });
-
-  const nextAvailableFerry = processedSchedule.find((item) => item.isNext);
-
-  const countdownString = useMemo(() => {
-    if (!nextAvailableFerry) return null;
-    const [hours, minutes] = nextAvailableFerry.time24.split(':').map(Number);
-    const target = new Date(now);
-    target.setHours(hours, minutes, 0, 0);
-
-    const diffMs = target - now;
-    if (diffMs <= 0) return "Departing Now";
-
-    const diffMins = Math.floor(diffMs / 60000);
-    const hrs = Math.floor(diffMins / 60);
-    const mins = diffMins % 60;
-    const secs = Math.floor((diffMs % 60000) / 1000);
-
-    if (hrs > 0) {
-      return `Departs in ${hrs}h ${mins}m ${secs}s`;
-    }
-    return `Departs in ${mins}m ${secs}s`;
-  }, [nextAvailableFerry, now]);
+  const activeSchedule = isFriday 
+    ? selectedOperator.fridaySchedule 
+    : selectedOperator.regularSchedule;
 
   return (
-    <div className="bg-[#f3f4f6] min-h-screen flex justify-center items-start p-0 sm:p-6 font-sans">
-      <div className="w-full max-w-md bg-white sm:rounded-[36px] shadow-xl border border-slate-100 min-h-screen sm:min-h-[840px] p-5 sm:p-6 flex flex-col justify-between space-y-5 overflow-hidden">
-        
-        <div className="space-y-5">
-          {/* Header */}
-          <div className="flex items-center justify-between pt-2 px-1">
-            <div>
-              <h1 className="text-2xl font-black text-slate-900 tracking-tight">Hello</h1>
-              <p className="text-xs font-semibold text-slate-400">{formattedDate} {isFriday && '• Friday'}</p>
-            </div>
-            <div className="text-right bg-slate-50 border border-slate-100 px-3.5 py-1.5 rounded-2xl shadow-sm">
-              <span className="text-sm font-black text-slate-800 tracking-wider font-mono">{formattedClock}</span>
-            </div>
-          </div>
-
-          {/* Next Ferry Card */}
-          <div className="bg-[#0b1329] text-white p-6 rounded-3xl shadow-xl relative overflow-hidden flex flex-col items-center justify-center text-center min-h-[160px] border border-slate-800">
-            <span className="px-3 py-1 rounded-full bg-sky-500/10 border border-sky-400/30 text-sky-400 text-[10px] font-extrabold tracking-widest uppercase mb-2">
-              NEXT AVAILABLE FERRY
-            </span>
-
-            <h3 className="text-sky-300 font-bold text-sm tracking-wide">
-              {nextAvailableFerry ? nextAvailableFerry.operatorName : "No More Ferries Today"}
-            </h3>
-
-            <div className="text-5xl font-black tracking-tight text-white my-1">
-              {nextAvailableFerry ? nextAvailableFerry.time : "--:--"}
-            </div>
-
-            <div className="mt-2 inline-flex items-center px-3.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-semibold">
-              {countdownString || "Service Completed for Today"}
-            </div>
-          </div>
-
-          {/* Route Switcher */}
-          <div className="bg-slate-100 p-1 rounded-2xl flex gap-1 border border-slate-200/60">
-            <button
-              onClick={() => setActiveRoute('MALE_TO_THULUSDHOO')}
-              className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all ${
-                activeRoute === 'MALE_TO_THULUSDHOO'
-                  ? 'bg-white text-slate-900 shadow-md'
-                  : 'text-slate-500 hover:text-slate-800'
-              }`}
+    <div className="max-w-2xl mx-auto p-4 space-y-6 font-sans">
+      {/* Operator Live Tracking Toolbar */}
+      <div className="bg-slate-50 rounded-2xl border border-slate-100 p-2 shadow-sm space-y-1.5">
+        {FERRY_OPERATORS.map((op) => (
+          <div 
+            key={op.id} 
+            className={`flex items-center justify-between p-2.5 rounded-xl border transition-all ${
+              selectedOperator.id === op.id 
+                ? "bg-white border-slate-300 shadow-xs ring-1 ring-slate-200" 
+                : "bg-white/60 border-slate-100 hover:border-slate-200"
+            }`}
+          >
+            <button 
+              onClick={() => setSelectedOperator(op)}
+              className="flex items-center gap-2.5 text-left flex-1"
             >
-              Malé → Thulusdhoo
-            </button>
-            <button
-              onClick={() => setActiveRoute('THULUSDHOO_TO_MALE')}
-              className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all ${
-                activeRoute === 'THULUSDHOO_TO_MALE'
-                  ? 'bg-white text-slate-900 shadow-md'
-                  : 'text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              Thulusdhoo → Malé
-            </button>
-          </div>
-
-          {/* Cards Grid */}
-          <div className="grid grid-cols-2 gap-3">
-            {FERRY_OPERATORS.map((op) => {
-              const isSelected = selectedOperator?.id === op.id;
-              const hasUpcoming = processedSchedule.some(
-                (s) => s.operatorId === op.id && s.status !== 'Departed'
-              );
-
-              return (
-                <div
-                  key={op.id}
-                  onClick={() => setSelectedOperator(op)}
-                  className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between h-28 relative ${
-                    isSelected
-                      ? 'bg-slate-900 text-white border-slate-900 shadow-lg scale-[1.02]'
-                      : 'bg-slate-50 hover:bg-slate-100/80 text-slate-800 border-slate-100 shadow-sm'
-                  }`}
-                >
-                  <div className="flex justify-between items-start">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
-                      isSelected ? 'bg-slate-800 text-white' : 'bg-white text-slate-700 shadow-sm'
-                    }`}>
-                      🚢
-                    </div>
-                    <span className={`w-2.5 h-2.5 rounded-full ${hasUpcoming ? 'bg-sky-500' : 'bg-slate-300'}`}></span>
-                  </div>
-
-                  <div>
-                    <h4 className="font-extrabold text-sm leading-tight">{op.name}</h4>
-                    <p className={`text-[11px] font-medium mt-0.5 ${isSelected ? 'text-slate-400' : 'text-slate-500'}`}>
-                      From {op.fareOneWay}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-
-            {/* Weather Card (Replaced Ticket Info) */}
-            <div className="p-4 rounded-2xl border bg-slate-50 text-slate-800 border-slate-100 shadow-sm flex flex-col justify-between h-28">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-                Weather
-              </span>
+              <span className={`w-2.5 h-2.5 rounded-full ${op.dotColor} shadow-xs`}></span>
               <div>
-                <h4 className="font-extrabold text-sm leading-tight text-slate-800">
-                  {weather.condition}
-                </h4>
-                <p className="text-xl font-black text-slate-900 mt-0.5 font-mono">
-                  {weather.temp}
-                </p>
+                <span className="text-xs font-black text-slate-800 block leading-none">{op.name}</span>
+                <span className="text-[10px] text-slate-400 font-medium leading-none mt-1 block">
+                  {op.vesselName ? <>Active: <strong className="text-slate-600">{op.vesselName}</strong></> : op.tag}
+                </span>
               </div>
-            </div>
+            </button>
+
+            {op.liveTrackingUrl ? (
+              <a 
+                href={op.liveTrackingUrl} 
+                target="_blank" 
+                rel="noreferrer"
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 text-[10px] font-bold transition-colors"
+              >
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                Live Location ↗
+              </a>
+            ) : (
+              <button 
+                onClick={() => setSelectedOperator(op)}
+                className="text-[10px] font-bold text-slate-400 hover:text-slate-600 px-2 py-1"
+              >
+                Schedule
+              </button>
+            )}
           </div>
+        ))}
+      </div>
 
-          {/* Conditional Schedule Warning Card */}
-          {weather.isBadWeather && (
-            <div className="bg-amber-50 border border-amber-200/80 p-4 rounded-2xl text-amber-900 text-xs shadow-sm space-y-1">
-              <h5 className="font-extrabold text-amber-950 uppercase text-[10px] tracking-wider">
-                Schedule Notice
-              </h5>
-              <p className="font-medium text-amber-900/90 leading-relaxed">
-                Ferry schedules may change due to weather conditions. Please contact the ferry operators for the latest information.
-              </p>
-            </div>
-          )}
-
-          {/* Full Schedule List */}
-          <div className="space-y-2.5 pt-1">
-            <div className="flex items-center justify-between px-1">
-              <span className="text-xs font-extrabold uppercase tracking-wider text-slate-400">
-                Full Schedule Today
-              </span>
-              <span className="text-[11px] font-bold text-sky-600">
-                {processedSchedule.length} Trips
-              </span>
-            </div>
-
-            <div className="space-y-2 max-h-60 overflow-y-auto pr-0.5">
-              {processedSchedule.length > 0 ? (
-                processedSchedule.map((item) => (
-                  <div
-                    key={item.id}
-                    className={`flex items-center justify-between p-3.5 rounded-2xl border transition-all ${
-                      item.status === 'Departed'
-                        ? 'bg-slate-50/60 border-slate-100 opacity-60'
-                        : item.isNext
-                        ? 'bg-sky-50/50 border-sky-300 shadow-sm'
-                        : 'bg-slate-50 border-slate-100'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-base font-black text-slate-900 font-mono">
-                        {item.time}
-                      </span>
-                      <div>
-                        <p className="text-xs font-extrabold text-slate-800 leading-none">
-                          {item.operatorName}
-                        </p>
-                        <p className="text-[10px] font-semibold text-slate-400 mt-1">
-                          {item.departure} → {item.destination}
-                        </p>
-                      </div>
-                    </div>
-
-                    <span className={`px-2.5 py-1 text-[10px] font-bold rounded-lg border ${item.style}`}>
-                      {item.status}
-                    </span>
-                  </div>
-                ))
-              ) : (
-                <div className="p-6 text-center bg-slate-50 rounded-2xl border border-slate-100 text-xs text-slate-400">
-                  No departures available for this route today.
-                </div>
-              )}
-            </div>
+      {/* Selected Operator Schedule Panel */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div>
+            <h2 className="text-base font-black text-slate-900">{selectedOperator.name}</h2>
+            <p className="text-xs text-slate-500">{selectedOperator.description}</p>
           </div>
-
+          <button
+            onClick={() => setIsFriday(!isFriday)}
+            className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
+              isFriday ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+            }`}
+          >
+            {isFriday ? "Friday Schedule" : "Regular Schedule"}
+          </button>
         </div>
 
-        {/* Modal */}
-        <ScheduleModal
-          operator={selectedOperator}
-          isFriday={isFriday}
-          onClose={() => setSelectedOperator(null)}
-        />
+        {/* Schedule List */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {activeSchedule.map((item) => (
+            <div key={item.id} className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-100 text-xs">
+              <span className="font-bold text-slate-700">{item.time}</span>
+              <span className="text-slate-500">{item.departure} → {item.destination}</span>
+            </div>
+          ))}
+        </div>
 
+        {/* Fares & Contact */}
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 text-xs text-slate-600">
+          <div>
+            <span>One Way: <strong>{selectedOperator.fareOneWay}</strong></span>
+            <span className="mx-2">•</span>
+            <span>Return: <strong>{selectedOperator.fareRoundTrip}</strong></span>
+          </div>
+          <div className="flex gap-2 font-semibold">
+            {selectedOperator.booking.map((num) => (
+              <a key={num} href={`tel:${num}`} className="text-indigo-600 hover:underline">
+                📞 {num}
+              </a>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
