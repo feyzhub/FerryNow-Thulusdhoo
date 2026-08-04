@@ -60,6 +60,11 @@
         booking: ["7810052", "7810078"],
         fareOneWay: "MVR 175",
         fareRoundTrip: "MVR 300",
+        // Fleet configurations with active state flag
+        vessels: [
+          { name: "Tharika 1", trackingUrl: "https://m.followme.mv/public/?id=19122", isActive: true },
+          { name: "Tharika 5", trackingUrl: "https://m.followme.mv/public/?id=19093", isActive: false }
+        ],
         regularSchedule: [
           { id: "t1", time: "09:15", time24: "09:15", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
           { id: "t2", time: "12:15", time24: "12:15", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
@@ -155,7 +160,7 @@
         name: "Tharika 2",
         tag: "Cargo / Supply",
         days: ["Sunday", "Monday", "Wednesday", "Thursday", "Saturday"],
-        thulusdhooTime: "07:30",
+        thulusdhooTime: "08:00",
         maleTime: "14:30",
         contacts: ["7761077"],
         liveTrackingUrl: "https://m.followme.mv/public/?id=17852"
@@ -258,8 +263,6 @@
             </div>
 
             <div className="p-5 overflow-y-auto space-y-4">
-              
-              {/* FollowMe Live Tracking Button (if available) */}
               {ferry.liveTrackingUrl && (
                 <a
                   href={ferry.liveTrackingUrl}
@@ -304,7 +307,6 @@
 
               <div className="space-y-2">
                 <span className="text-slate-400 block text-[10px] uppercase font-bold">Departure Times</span>
-                
                 <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-100">
                   <div>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">From Thulusdhoo</span>
@@ -353,6 +355,8 @@
       const [filterRoute, setFilterRoute] = useState('ALL');
       const rawSchedule = isFriday ? operator.fridaySchedule : operator.regularSchedule;
 
+      const activeVessel = operator.vessels?.find(v => v.isActive);
+
       const modalSchedule = useMemo(() => {
         if (filterRoute === 'ALL') return rawSchedule;
         return rawSchedule.filter((item) => item.route === filterRoute);
@@ -378,6 +382,31 @@
             </div>
 
             <div className="p-5 overflow-y-auto space-y-4">
+              
+              {/* Active Vessel Tracking Banner */}
+              {activeVessel && (
+                <a
+                  href={activeVessel.trackingUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center justify-between p-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl shadow-md transition-colors"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <span className="relative flex h-3 w-3">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-300 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
+                    </span>
+                    <div>
+                      <span className="text-xs font-black uppercase tracking-wider block leading-none">
+                        {activeVessel.name} • Live Location
+                      </span>
+                      <span className="text-[10px] text-emerald-100 font-medium">FollowMe.mv Marine GPS</span>
+                    </div>
+                  </div>
+                  <span className="text-xs font-bold bg-white/20 px-2.5 py-1 rounded-lg">View ↗</span>
+                </a>
+              )}
+
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
                   <span className="text-slate-400 block text-[10px] uppercase font-bold">One Way</span>
@@ -520,7 +549,6 @@
         day: 'numeric'
       });
 
-      // Helper to generate a sorted schedule array for a specific day configuration
       const buildScheduleForDay = (isFriday, isTomorrow = false) => {
         let trips = [];
         FERRY_OPERATORS.forEach((operator) => {
@@ -543,7 +571,6 @@
       const todaysDailySchedule = useMemo(() => buildScheduleForDay(isFridayToday, false), [activeRoute, isFridayToday]);
       const tomorrowsDailySchedule = useMemo(() => buildScheduleForDay(isFridayTomorrow, true), [activeRoute, isFridayTomorrow]);
 
-      // Process today's schedule items against current time
       const processedTodaySchedule = useMemo(() => {
         const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
@@ -560,7 +587,6 @@
 
       const hasUpcomingToday = processedTodaySchedule.some((item) => item.status !== "Departed");
 
-      // Build unified schedule list
       const displaySchedule = useMemo(() => {
         if (hasUpcomingToday) {
           const nextAvailable = processedTodaySchedule.find((item) => item.status !== "Departed");
@@ -601,7 +627,6 @@
         ];
       }, [hasUpcomingToday, processedTodaySchedule, tomorrowsDailySchedule]);
 
-      // Determine the overall next ferry
       const nextAvailableFerry = useMemo(() => {
         if (hasUpcomingToday) {
           return processedTodaySchedule.find((item) => item.status !== "Departed");
@@ -609,7 +634,6 @@
         return tomorrowsDailySchedule[0] || null;
       }, [hasUpcomingToday, processedTodaySchedule, tomorrowsDailySchedule]);
 
-      // Calculate countdown dynamically across day boundaries
       const countdownString = useMemo(() => {
         if (!nextAvailableFerry) return null;
         const [hours, minutes] = nextAvailableFerry.time24.split(':').map(Number);
@@ -640,15 +664,12 @@
             
             <div className="space-y-4">
               
-              {/* Header: Hello (Left) — Weather (Center) — Time/Date (Right) */}
               <div className="flex items-center justify-between pt-1 px-1">
-                {/* Left: Greeting */}
                 <div className="flex-1">
                   <h1 className="text-2xl font-black text-slate-900 tracking-tight leading-none">Hello</h1>
                   <p className="text-[11px] font-semibold text-slate-400 mt-1">{formattedDate} {isFridayToday && '• Fri'}</p>
                 </div>
 
-                {/* Center: Weather */}
                 <div className="flex-1 flex justify-center">
                   <div className="bg-slate-50 border border-slate-100 px-3.5 py-1.5 rounded-2xl shadow-sm text-center">
                     <span className="text-xs font-black text-slate-800">
@@ -657,7 +678,6 @@
                   </div>
                 </div>
 
-                {/* Right: Clock */}
                 <div className="flex-1 flex justify-end">
                   <div className="bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-2xl shadow-sm text-center">
                     <span className="text-xs font-black text-slate-800 tracking-wider font-mono">
@@ -667,10 +687,8 @@
                 </div>
               </div>
 
-              {/* Next Available Ferry Card with Weather Animation */}
+              {/* Next Available Ferry Card */}
               <div className="bg-[#0b1329] text-white p-6 rounded-3xl shadow-xl relative overflow-hidden flex flex-col items-center justify-center text-center min-h-[160px] border border-slate-800">
-                
-                {/* Weather Background Component */}
                 <WeatherBackground weatherType={weather.type} />
 
                 <span className="relative z-10 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-400/30 text-sky-400 text-[10px] font-extrabold tracking-widest uppercase mb-2">
@@ -695,24 +713,58 @@
                 </div>
               </div>
 
-              {/* Single Row Horizontal Operators Toolbar */}
-              <div className="bg-slate-50 rounded-2xl border border-slate-100 p-1.5 shadow-sm flex items-center justify-between">
-                {FERRY_OPERATORS.map((op, idx) => (
-                  <React.Fragment key={op.id}>
-                    <button
-                      onClick={() => setSelectedOperator(op)}
-                      className="flex-1 flex items-center justify-center gap-2 py-2 px-1 rounded-xl hover:bg-slate-200/60 active:bg-slate-200 transition-all group"
-                    >
-                      <span className={`w-2.5 h-2.5 rounded-full ${op.dotColor} shadow-sm transition-transform group-hover:scale-125`}></span>
-                      <span className="text-xs font-extrabold text-slate-700 group-hover:text-slate-900 tracking-tight">
-                        {op.shortName}
-                      </span>
-                    </button>
-                    {idx < FERRY_OPERATORS.length - 1 && (
-                      <div className="h-4 w-px bg-slate-200/80"></div>
-                    )}
-                  </React.Fragment>
-                ))}
+              {/* Single Row Horizontal Operators Toolbar with Active Vessel Status */}
+              <div className="bg-slate-50 rounded-2xl border border-slate-100 p-2 shadow-sm space-y-1.5">
+                {FERRY_OPERATORS.map((op, idx) => {
+                  const activeVessel = op.vessels?.find((v) => v.isActive);
+
+                  return (
+                    <div key={op.id} className="flex items-center justify-between p-2 rounded-xl bg-white border border-slate-100 hover:border-slate-200 transition-all shadow-2xs">
+                      <button
+                        onClick={() => setSelectedOperator(op)}
+                        className="flex items-center gap-2 text-left flex-1"
+                      >
+                        <span className={`w-2.5 h-2.5 rounded-full ${op.dotColor} shadow-xs`}></span>
+                        <div>
+                          <span className="text-xs font-black text-slate-800 block leading-none">
+                            {op.name}
+                          </span>
+                          {activeVessel ? (
+                            <span className="text-[10px] text-slate-400 font-medium leading-none mt-1 block">
+                              Active: <strong className="text-slate-600">{activeVessel.name}</strong>
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-slate-400 font-medium leading-none mt-1 block">
+                              {op.tag}
+                            </span>
+                          )}
+                        </div>
+                      </button>
+
+                      {activeVessel ? (
+                        <a
+                          href={activeVessel.trackingUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 text-[10px] font-bold transition-colors"
+                        >
+                          <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                          </span>
+                          Live Location ↗
+                        </a>
+                      ) : (
+                        <button
+                          onClick={() => setSelectedOperator(op)}
+                          className="text-[10px] font-bold text-slate-400 hover:text-slate-600 px-2 py-1"
+                        >
+                          Schedule
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Route Switcher */}
@@ -739,7 +791,7 @@
                 </button>
               </div>
 
-              {/* Weather Notice (Conditional) */}
+              {/* Weather Notice */}
               {weather.isBadWeather && (
                 <div className="bg-amber-50 border border-amber-200/80 p-3 rounded-2xl text-amber-900 text-xs shadow-sm space-y-0.5">
                   <h5 className="font-extrabold text-amber-950 uppercase text-[10px] tracking-wider">
@@ -762,7 +814,6 @@
                   </span>
                 </div>
 
-                {/* Expanded Scrollable Schedule Container */}
                 <div className="space-y-2 max-h-[260px] overflow-y-auto pr-0.5">
                   {displaySchedule.length > 0 ? (
                     displaySchedule.map((item) => {
