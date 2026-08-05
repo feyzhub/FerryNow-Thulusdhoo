@@ -152,6 +152,26 @@
           { id: "rvf4", time: "08:00", time24: "08:00", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
           { id: "rvf5", time: "14:00", time24: "14:00", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
         ]
+      },
+      {
+        id: "mtcc_public",
+        name: "MTCC Public Ferry (Route 301)",
+        shortName: "MTCC Ferry",
+        dotColor: "bg-indigo-500",
+        tag: "Public Ferry",
+        description: "Government public ferry (slow ferry). Stops at Himmafushi & Huraa.",
+        booking: ["1920"],
+        website: "rtl.mv",
+        fareOneWay: "MVR 22",
+        fareRoundTrip: "MVR 44",
+        vessels: [
+          { name: "RTL / MTCC Vessel", trackingUrl: "https://rtl.mv/", isActive: true }
+        ],
+        regularSchedule: [
+          { id: "mt1", time: "14:30", time24: "14:30", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "mt2", time: "07:30", time24: "07:30", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+        ],
+        fridaySchedule: [] // MTCC Route 301 does not operate on Fridays
       }
     ];
 
@@ -766,7 +786,7 @@
               {/* Operators Card Grid */}
               <div className="pt-2">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-2 px-1">Operators</span>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {FERRY_OPERATORS.map((op) => (
                     <button
                       key={op.id}
