@@ -155,7 +155,7 @@
       },
       {
         id: "mtcc_public",
-        name: "MTCC Public Ferry",
+        name: "MTCC Public Ferry (Route 301)",
         shortName: "MTCC Ferry",
         dotColor: "bg-indigo-500",
         tag: "Public Ferry",
@@ -649,43 +649,43 @@
         <div className="min-h-screen flex justify-center py-0 sm:py-6 px-0 sm:px-4">
           <div className="w-full max-w-md bg-white sm:rounded-3xl shadow-xl overflow-hidden flex flex-col min-h-screen sm:min-h-0">
             
-           <!-- Header with Custom Isometric Background Image from GitHub -->
-<div 
-  className="relative text-white p-6 overflow-hidden bg-cover bg-center"
-  style={{ backgroundImage: "url('https://raw.githubusercontent.com/feyzhub/FerryNow-Thulusdhoo/main/V1.png')" }}
->
-  <!-- Gradient overlay for text legibility -->
-  <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-slate-900/70 to-slate-950/85 pointer-events-none"></div>
+            {/* Header with Custom Isometric Background Image from GitHub Repository */}
+            <div 
+              className="relative text-white p-6 overflow-hidden bg-cover bg-center"
+              style={{ backgroundImage: "url('https://raw.githubusercontent.com/feyzhub/FerryNow-Thulusdhoo/main/V1.png')" }}
+            >
+              {/* Dark overlay to ensure text contrast */}
+              <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-slate-900/70 to-slate-950/85 pointer-events-none"></div>
 
-  <WeatherBackground weatherType={weather.type} />
+              <WeatherBackground weatherType={weather.type} />
 
-  <div className="relative z-20 flex items-start justify-between drop-shadow-md">
-    <div>
-      <span className="text-[10px] font-bold uppercase tracking-widest text-sky-300 bg-slate-900/80 border border-sky-500/30 px-2.5 py-1 rounded-full inline-block mb-1 shadow-sm backdrop-blur-md">
-        Maldives Atoll Transit
-      </span>
-      <h1 className="text-2xl font-black tracking-tight drop-shadow-lg">Thulusdhoo Express</h1>
-    </div>
-    <div className="text-right drop-shadow-lg">
-      <div className="text-2xl font-black font-mono tracking-tight">{formattedClock}</div>
-      <div className="text-[10px] font-semibold text-slate-300 uppercase tracking-wider">{formattedDate}</div>
-    </div>
-  </div>
+              <div className="relative z-20 flex items-start justify-between drop-shadow-md">
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-sky-300 bg-slate-900/80 border border-sky-500/30 px-2.5 py-1 rounded-full inline-block mb-1 shadow-sm backdrop-blur-md">
+                    Maldives Atoll Transit
+                  </span>
+                  <h1 className="text-2xl font-black tracking-tight drop-shadow-lg">Thulusdhoo Express</h1>
+                </div>
+                <div className="text-right drop-shadow-lg">
+                  <div className="text-2xl font-black font-mono tracking-tight">{formattedClock}</div>
+                  <div className="text-[10px] font-semibold text-slate-300 uppercase tracking-wider">{formattedDate}</div>
+                </div>
+              </div>
 
-  {/* Weather Status Bar */}
-  <div className="relative z-20 mt-4 flex items-center justify-between pt-3 border-t border-white/10 text-xs text-slate-200 drop-shadow-sm">
-    <div className="flex items-center gap-2">
-      <span className="text-base font-bold text-white">{weather.temp}°C</span>
-      <span className="text-slate-400">•</span>
-      <span className="font-medium text-slate-100">{weather.condition}</span>
-    </div>
-    {weather.isBadWeather && (
-      <span className="text-[10px] font-extrabold text-amber-300 bg-amber-950/90 border border-amber-600/60 px-2 py-0.5 rounded-full shadow-sm">
-        ⚠️ Sea Advisory
-      </span>
-    )}
-  </div>
-</div>
+              {/* Weather Status Bar */}
+              <div className="relative z-20 mt-4 flex items-center justify-between pt-3 border-t border-white/10 text-xs text-slate-200 drop-shadow-sm">
+                <div className="flex items-center gap-2">
+                  <span className="text-base font-bold text-white">{weather.temp}°C</span>
+                  <span className="text-slate-400">•</span>
+                  <span className="font-medium text-slate-100">{weather.condition}</span>
+                </div>
+                {weather.isBadWeather && (
+                  <span className="text-[10px] font-extrabold text-amber-300 bg-amber-950/90 border border-amber-600/60 px-2 py-0.5 rounded-full shadow-sm">
+                    ⚠️ Sea Advisory
+                  </span>
+                )}
+              </div>
+            </div>
 
             {/* Main Content Area */}
             <div className="p-4 sm:p-5 flex-1 space-y-5">
