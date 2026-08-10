@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Thulusdhoo Ferry Transport</title>
+  <title>Thulusdhoo Ferry Transport V2</title>
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -40,6 +40,10 @@
       mask-image: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 50%, rgba(0,0,0,0) 100%);
       -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 50%, rgba(0,0,0,0) 100%);
     }
+
+    /* Hide Scrollbar for clean Operator Bar */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
 <body class="bg-[#f3f4f6] text-slate-800 min-h-screen">
@@ -47,10 +51,10 @@
   <div id="root"></div>
 
   <script type="text/babel">
-    const { useState, useEffect, useMemo } = React;
+    const { useState, useEffect, useMemo, useCallback } = React;
 
-    // --- OPERATOR DATA WITH UPDATED THARIKA VESSELS ---
-    const FERRY_OPERATORS = [
+    // --- OPERATOR DATA WITH DYNAMIC LIVE VESSEL TRACKING ---
+    const INITIAL_FERRY_OPERATORS = [
       {
         id: "tharika",
         name: "Tharika Express",
@@ -62,8 +66,8 @@
         fareOneWay: "MVR 175",
         fareRoundTrip: "MVR 300",
         vessels: [
-          { name: "Tharika 1", trackingUrl: "https://m.followme.mv/public/?id=19122", isActive: true },
-          { name: "Tharika 5", trackingUrl: "https://m.followme.mv/public/?id=19093", isActive: false }
+          { name: "Tharika 1", trackingUrl: "https://m.followme.mv/public/?id=19122", isActive: false, status: "checking" },
+          { name: "Tharika 5", trackingUrl: "https://m.followme.mv/public/?id=19093", isActive: false, status: "checking" }
         ],
         regularSchedule: [
           { id: "t1", time: "09:15", time24: "09:15", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
@@ -100,8 +104,8 @@
         fareOneWay: "MVR 175",
         fareRoundTrip: "MVR 300",
         vessels: [
-          { name: "Refcool 1", trackingUrl: "https://m.followme.mv/public/14166", isActive: true },
-          { name: "Refcool 2", trackingUrl: "https://m.followme.mv/public/14204", isActive: false }
+          { name: "Refcool 1", trackingUrl: "https://m.followme.mv/public/14166", isActive: false, status: "checking" },
+          { name: "Refcool 2", trackingUrl: "https://m.followme.mv/public/14204", isActive: false, status: "checking" }
         ],
         regularSchedule: [
           { id: "r1", time: "09:15", time24: "09:15", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
@@ -138,8 +142,8 @@
         fareOneWay: "MVR 175",
         fareRoundTrip: "MVR 300",
         vessels: [
-          { name: "River Speed 1", trackingUrl: "https://m.followme.mv/public/11334", isActive: true },
-          { name: "River Speed 5", trackingUrl: "https://m.followme.mv/public/8739", isActive: false }
+          { name: "River Speed 1", trackingUrl: "https://m.followme.mv/public/11334", isActive: false, status: "checking" },
+          { name: "River Speed 5", trackingUrl: "https://m.followme.mv/public/8739", isActive: false, status: "checking" }
         ],
         regularSchedule: [
           { id: "rv1", time: "09:20", time24: "09:20", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
@@ -163,7 +167,7 @@
       {
         id: "mtcc_public",
         name: "MTCC Public Ferry (Route 301)",
-        shortName: "MTCC Ferry",
+        shortName: "MTCC",
         dotColor: "bg-indigo-500",
         tag: "Public Ferry",
         description: "Government public ferry (slow ferry). Stops at Himmafushi & Huraa.",
@@ -172,7 +176,7 @@
         fareOneWay: "MVR 22",
         fareRoundTrip: "MVR 44",
         vessels: [
-          { name: "RTL / MTCC Vessel", trackingUrl: "https://rtl.mv/", isActive: true }
+          { name: "RTL / MTCC Vessel", trackingUrl: "https://rtl.mv/", isActive: true, status: "online" }
         ],
         regularSchedule: [
           { id: "mt1", time: "14:30", time24: "14:30", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
@@ -204,6 +208,29 @@
         liveTrackingUrl: "https://m.followme.mv/public/18695"
       }
     ];
+
+    // Helper: Check FollowMe status using CORS proxy scraper
+    async function checkFollowMeStatus(trackingUrl) {
+      if (!trackingUrl || !trackingUrl.includes('followme.mv')) return false;
+      try {
+        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(trackingUrl)}`;
+        const response = await fetch(proxyUrl);
+        if (!response.ok) return false;
+        const data = await response.json();
+        const html = data.contents || "";
+        
+        // Detect green indicators on FollowMe page (online status badges, green color codes, or live GPS indicators)
+        const isOnline = html.includes('#00FF00') || 
+                         html.includes('#00ff00') || 
+                         html.toLowerCase().includes('status: online') || 
+                         html.toLowerCase().includes('tracking online') || 
+                         html.toLowerCase().includes('active');
+        return isOnline;
+      } catch (err) {
+        console.warn('FollowMe proxy check failed for', trackingUrl, err);
+        return false;
+      }
+    }
 
     const decodeWeatherCode = (code) => {
       switch (code) {
@@ -379,6 +406,8 @@
       if (!operator) return null;
       const [filterRoute, setFilterRoute] = useState('ALL');
       const rawSchedule = isFriday ? operator.fridaySchedule : operator.regularSchedule;
+      
+      // Auto-select dynamically active vessel (or fallback to vessel 0)
       const activeVessel = operator.vessels?.find(v => v.isActive) || operator.vessels?.[0];
 
       const modalSchedule = useMemo(() => {
@@ -420,7 +449,7 @@
                     </span>
                     <div>
                       <span className="text-xs font-black uppercase tracking-wider block leading-none">
-                        {activeVessel.name} • Live Location
+                        🟢 {activeVessel.name} • Live Location
                       </span>
                       <span className="text-[10px] text-emerald-100 font-medium">FollowMe.mv Marine GPS</span>
                     </div>
@@ -515,6 +544,7 @@
     }
 
     function App() {
+      const [operators, setOperators] = useState(INITIAL_FERRY_OPERATORS);
       const [selectedOperator, setSelectedOperator] = useState(null);
       const [selectedSupplyFerry, setSelectedSupplyFerry] = useState(null);
       const [activeRoute, setActiveRoute] = useState('MALE_TO_THULUSDHOO');
@@ -526,6 +556,40 @@
         isBadWeather: false,
         type: 'cloudy'
       });
+
+      // --- LIVE VESSEL STATUS CHECKER ---
+      const refreshVesselStatuses = useCallback(async () => {
+        const updatedOperators = await Promise.all(
+          operators.map(async (op) => {
+            if (!op.vessels || op.vessels.length === 0) return op;
+
+            let activeFound = false;
+            const updatedVessels = await Promise.all(
+              op.vessels.map(async (vessel) => {
+                const isOnline = await checkFollowMeStatus(vessel.trackingUrl);
+                // First vessel detected online becomes active
+                const isActive = isOnline && !activeFound;
+                if (isActive) activeFound = true;
+                return { ...vessel, isActive, status: isOnline ? 'online' : 'offline' };
+              })
+            );
+
+            // Fallback: If no vessel is actively returning online status, keep first vessel ready
+            if (!activeFound && updatedVessels.length > 0) {
+              updatedVessels[0].isActive = true;
+            }
+
+            return { ...op, vessels: updatedVessels };
+          })
+        );
+        setOperators(updatedOperators);
+      }, []);
+
+      useEffect(() => {
+        refreshVesselStatuses();
+        const trackerTimer = setInterval(refreshVesselStatuses, 45000); // Check every 45s
+        return () => clearInterval(trackerTimer);
+      }, []);
 
       useEffect(() => {
         const timer = setInterval(() => setNow(new Date()), 1000);
@@ -572,7 +636,7 @@
 
       const buildScheduleForDay = (isFriday, isTomorrow = false) => {
         let trips = [];
-        FERRY_OPERATORS.forEach((operator) => {
+        operators.forEach((operator) => {
           const scheduleList = isFriday ? operator.fridaySchedule : operator.regularSchedule;
           scheduleList.forEach((trip) => {
             trips.push({
@@ -589,8 +653,8 @@
         return filtered.sort((a, b) => a.time24.localeCompare(b.time24));
       };
 
-      const todaysDailySchedule = useMemo(() => buildScheduleForDay(isFridayToday, false), [activeRoute, isFridayToday]);
-      const tomorrowsDailySchedule = useMemo(() => buildScheduleForDay(isFridayTomorrow, true), [activeRoute, isFridayTomorrow]);
+      const todaysDailySchedule = useMemo(() => buildScheduleForDay(isFridayToday, false), [activeRoute, isFridayToday, operators]);
+      const tomorrowsDailySchedule = useMemo(() => buildScheduleForDay(isFridayTomorrow, true), [activeRoute, isFridayTomorrow, operators]);
 
       const processedTodaySchedule = useMemo(() => {
         const currentMinutes = now.getHours() * 60 + now.getMinutes();
@@ -696,8 +760,24 @@
             </div>
 
             {/* Main Content Area */}
-            <div className="p-4 sm:p-5 flex-1 space-y-5 relative z-10 pb-40">
+            <div className="p-4 sm:p-5 flex-1 space-y-4 relative z-10 pb-40">
               
+              {/* COMPACT SINGLE-ROW OPERATOR BAR */}
+              <div className="bg-slate-100/90 p-1.5 rounded-2xl backdrop-blur-sm border border-slate-200/60">
+                <div className="flex items-center justify-between gap-1 overflow-x-auto no-scrollbar">
+                  {operators.map((op) => (
+                    <button
+                      key={op.id}
+                      onClick={() => setSelectedOperator(op)}
+                      className="flex-1 min-w-fit px-2.5 py-1.5 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition-all text-xs font-bold text-slate-800"
+                    >
+                      <span className={`w-2 h-2 rounded-full ${op.dotColor} shrink-0`}></span>
+                      <span className="truncate whitespace-nowrap text-[11px]">{op.shortName}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Route Selector Tab */}
               <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-100/80 rounded-2xl backdrop-blur-sm">
                 <button
@@ -767,7 +847,7 @@
                       );
                     }
 
-                    const operatorObj = FERRY_OPERATORS.find(o => o.id === item.operatorId);
+                    const operatorObj = operators.find(o => o.id === item.operatorId);
 
                     return (
                       <div
@@ -796,26 +876,8 @@
                 </div>
               </div>
 
-              {/* Operators Card Grid */}
-              <div className="pt-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-2 px-1">Operators</span>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {FERRY_OPERATORS.map((op) => (
-                    <button
-                      key={op.id}
-                      onClick={() => setSelectedOperator(op)}
-                      className="p-3 bg-slate-50/80 hover:bg-slate-100 border border-slate-100 rounded-2xl text-center transition-colors group backdrop-blur-sm"
-                    >
-                      <div className={`w-2 h-2 rounded-full ${op.dotColor} mx-auto mb-1.5`}></div>
-                      <span className="text-xs font-black text-slate-800 group-hover:text-slate-900 block truncate">{op.shortName}</span>
-                      <span className="text-[9px] text-slate-400 font-medium block">{op.tag}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               {/* Cargo & Supply Ferries */}
-              <div className="pt-2">
+              <div className="pt-1">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-2 px-1">Cargo & Supply Vessels</span>
                 <div className="grid grid-cols-2 gap-2">
                   {SUPPLY_FERRIES.map((supply) => (
