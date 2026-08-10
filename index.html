@@ -34,17 +34,17 @@
     .animate-rain { animation: rain 1.2s linear infinite; }
     .animate-cloud { animation: cloudDrift 16s ease-in-out infinite; }
     .animate-sun { animation: sunGlow 4s ease-in-out infinite; }
+
+    /* Custom CSS mask for smooth top fade effect */
+    .fade-to-top-mask {
+      mask-image: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 50%, rgba(0,0,0,0) 100%);
+      -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 50%, rgba(0,0,0,0) 100%);
+    }
   </style>
 </head>
-<body class="bg-[#f3f4f6] text-slate-800 relative min-h-screen">
-  
-  <!-- Bottom Background Image Container -->
-  <div 
-    class="fixed bottom-0 left-0 right-0 h-64 bg-cover bg-bottom bg-no-repeat pointer-events-none z-0"
-    style="background-image: url('https://raw.githubusercontent.com/feyzhub/FerryNow-Thulusdhoo/main/back_btm.png');"
-  ></div>
+<body class="bg-[#f3f4f6] text-slate-800 min-h-screen">
 
-  <div id="root" class="relative z-10"></div>
+  <div id="root"></div>
 
   <script type="text/babel">
     const { useState, useEffect, useMemo } = React;
@@ -654,14 +654,15 @@
 
       return (
         <div className="min-h-screen flex justify-center py-0 sm:py-6 px-0 sm:px-4">
-          <div className="w-full max-w-md bg-white/90 sm:rounded-3xl shadow-xl overflow-hidden flex flex-col min-h-screen sm:min-h-0 backdrop-blur-sm">
+          
+          {/* Main App Container (Relative Context for Bottom Graphic) */}
+          <div className="relative w-full max-w-md bg-white/90 sm:rounded-3xl shadow-xl overflow-hidden flex flex-col min-h-screen sm:min-h-0 backdrop-blur-sm z-0">
             
-            {/* Header with Custom Isometric Background Image from GitHub Repository */}
+            {/* Header Section */}
             <div 
-              className="relative text-white p-6 overflow-hidden bg-cover bg-center"
+              className="relative text-white p-6 overflow-hidden bg-cover bg-center z-10"
               style={{ backgroundImage: "url('https://raw.githubusercontent.com/feyzhub/FerryNow-Thulusdhoo/main/V1.png')" }}
             >
-              {/* Dark overlay to ensure text contrast */}
               <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-slate-900/70 to-slate-950/85 pointer-events-none"></div>
 
               <WeatherBackground weatherType={weather.type} />
@@ -695,10 +696,10 @@
             </div>
 
             {/* Main Content Area */}
-            <div className="p-4 sm:p-5 flex-1 space-y-5">
+            <div className="p-4 sm:p-5 flex-1 space-y-5 relative z-10 pb-40">
               
               {/* Route Selector Tab */}
-              <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-100/80 rounded-2xl">
+              <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-100/80 rounded-2xl backdrop-blur-sm">
                 <button
                   onClick={() => setActiveRoute('MALE_TO_THULUSDHOO')}
                   className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all ${
@@ -723,7 +724,7 @@
 
               {/* Next Ferry Alert Banner */}
               {nextAvailableFerry && (
-                <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent border border-emerald-500/20 flex items-center justify-between">
+                <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent border border-emerald-500/20 flex items-center justify-between backdrop-blur-sm">
                   <div className="flex items-center gap-3">
                     <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
                     <div>
@@ -772,8 +773,8 @@
                       <div
                         key={item.id}
                         onClick={() => setSelectedOperator(operatorObj)}
-                        className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between hover:border-slate-300 ${
-                          item.isNext ? 'bg-emerald-50/50 border-emerald-200 shadow-sm' : 'bg-slate-50/60 border-slate-100'
+                        className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between hover:border-slate-300 backdrop-blur-sm ${
+                          item.isNext ? 'bg-emerald-50/70 border-emerald-200 shadow-sm' : 'bg-slate-50/70 border-slate-100'
                         }`}
                       >
                         <div className="flex items-center gap-3">
@@ -803,7 +804,7 @@
                     <button
                       key={op.id}
                       onClick={() => setSelectedOperator(op)}
-                      className="p-3 bg-slate-50/80 hover:bg-slate-100 border border-slate-100 rounded-2xl text-center transition-colors group"
+                      className="p-3 bg-slate-50/80 hover:bg-slate-100 border border-slate-100 rounded-2xl text-center transition-colors group backdrop-blur-sm"
                     >
                       <div className={`w-2 h-2 rounded-full ${op.dotColor} mx-auto mb-1.5`}></div>
                       <span className="text-xs font-black text-slate-800 group-hover:text-slate-900 block truncate">{op.shortName}</span>
@@ -814,14 +815,14 @@
               </div>
 
               {/* Cargo & Supply Ferries */}
-              <div className="pt-2 pb-6">
+              <div className="pt-2">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-2 px-1">Cargo & Supply Vessels</span>
                 <div className="grid grid-cols-2 gap-2">
                   {SUPPLY_FERRIES.map((supply) => (
                     <button
                       key={supply.id}
                       onClick={() => setSelectedSupplyFerry(supply)}
-                      className="p-3 bg-amber-50/50 hover:bg-amber-100/50 border border-amber-200/60 rounded-2xl text-left transition-colors"
+                      className="p-3 bg-amber-50/70 hover:bg-amber-100/70 border border-amber-200/60 rounded-2xl text-left transition-colors backdrop-blur-sm"
                     >
                       <span className="text-[9px] uppercase font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full inline-block mb-1">
                         {supply.tag}
@@ -834,6 +835,12 @@
               </div>
 
             </div>
+
+            {/* Bottom Background Image Inside App with Fade to Top */}
+            <div 
+              className="absolute bottom-0 left-0 right-0 h-48 bg-cover bg-bottom bg-no-repeat pointer-events-none z-0 fade-to-top-mask opacity-80"
+              style={{ backgroundImage: "url('https://raw.githubusercontent.com/feyzhub/FerryNow-Thulusdhoo/main/back_btm.png')" }}
+            ></div>
 
             {/* Modals */}
             {selectedOperator && (
