@@ -15,7 +15,7 @@
   <!-- Babel Compiler -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-  <!-- Custom CSS for Weather Animations -->
+  <!-- Custom CSS for Weather Animations & Fade Mask -->
   <style>
     @keyframes rain {
       0% { transform: translateY(-100%) translateX(0); opacity: 0; }
@@ -35,7 +35,7 @@
     .animate-cloud { animation: cloudDrift 16s ease-in-out infinite; }
     .animate-sun { animation: sunGlow 4s ease-in-out infinite; }
 
-    /* Custom CSS mask for smooth top fade effect */
+    /* Smooth top fade for bottom image */
     .fade-to-top-mask {
       mask-image: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 50%, rgba(0,0,0,0) 100%);
       -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 50%, rgba(0,0,0,0) 100%);
@@ -49,7 +49,7 @@
   <script type="text/babel">
     const { useState, useEffect, useMemo } = React;
 
-    // --- OPERATOR DATA WITH LIVE TRACKERS ---
+    // --- OPERATOR DATA WITH UPDATED THARIKA VESSELS ---
     const FERRY_OPERATORS = [
       {
         id: "tharika",
@@ -379,7 +379,7 @@
       if (!operator) return null;
       const [filterRoute, setFilterRoute] = useState('ALL');
       const rawSchedule = isFriday ? operator.fridaySchedule : operator.regularSchedule;
-      const activeVessel = operator.vessels?.find(v => v.isActive);
+      const activeVessel = operator.vessels?.find(v => v.isActive) || operator.vessels?.[0];
 
       const modalSchedule = useMemo(() => {
         if (filterRoute === 'ALL') return rawSchedule;
@@ -655,7 +655,7 @@
       return (
         <div className="min-h-screen flex justify-center py-0 sm:py-6 px-0 sm:px-4">
           
-          {/* Main App Container (Relative Context for Bottom Graphic) */}
+          {/* Main App Container */}
           <div className="relative w-full max-w-md bg-white/90 sm:rounded-3xl shadow-xl overflow-hidden flex flex-col min-h-screen sm:min-h-0 backdrop-blur-sm z-0">
             
             {/* Header Section */}
