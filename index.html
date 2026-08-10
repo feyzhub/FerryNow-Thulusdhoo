@@ -36,8 +36,15 @@
     .animate-sun { animation: sunGlow 4s ease-in-out infinite; }
   </style>
 </head>
-<body class="bg-[#f3f4f6] text-slate-800">
-  <div id="root"></div>
+<body class="bg-[#f3f4f6] text-slate-800 relative min-h-screen">
+  
+  <!-- Bottom Background Image Container -->
+  <div 
+    class="fixed bottom-0 left-0 right-0 h-64 bg-cover bg-bottom bg-no-repeat pointer-events-none z-0"
+    style="background-image: url('https://raw.githubusercontent.com/feyzhub/FerryNow-Thulusdhoo/main/back_btm.png');"
+  ></div>
+
+  <div id="root" class="relative z-10"></div>
 
   <script type="text/babel">
     const { useState, useEffect, useMemo } = React;
@@ -647,7 +654,7 @@
 
       return (
         <div className="min-h-screen flex justify-center py-0 sm:py-6 px-0 sm:px-4">
-          <div className="w-full max-w-md bg-white sm:rounded-3xl shadow-xl overflow-hidden flex flex-col min-h-screen sm:min-h-0">
+          <div className="w-full max-w-md bg-white/90 sm:rounded-3xl shadow-xl overflow-hidden flex flex-col min-h-screen sm:min-h-0 backdrop-blur-sm">
             
             {/* Header with Custom Isometric Background Image from GitHub Repository */}
             <div 
@@ -691,7 +698,7 @@
             <div className="p-4 sm:p-5 flex-1 space-y-5">
               
               {/* Route Selector Tab */}
-              <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 rounded-2xl">
+              <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-100/80 rounded-2xl">
                 <button
                   onClick={() => setActiveRoute('MALE_TO_THULUSDHOO')}
                   className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all ${
@@ -796,7 +803,7 @@
                     <button
                       key={op.id}
                       onClick={() => setSelectedOperator(op)}
-                      className="p-3 bg-slate-50 hover:bg-slate-100 border border-slate-100 rounded-2xl text-center transition-colors group"
+                      className="p-3 bg-slate-50/80 hover:bg-slate-100 border border-slate-100 rounded-2xl text-center transition-colors group"
                     >
                       <div className={`w-2 h-2 rounded-full ${op.dotColor} mx-auto mb-1.5`}></div>
                       <span className="text-xs font-black text-slate-800 group-hover:text-slate-900 block truncate">{op.shortName}</span>
@@ -807,7 +814,7 @@
               </div>
 
               {/* Cargo & Supply Ferries */}
-              <div className="pt-2">
+              <div className="pt-2 pb-6">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-2 px-1">Cargo & Supply Vessels</span>
                 <div className="grid grid-cols-2 gap-2">
                   {SUPPLY_FERRIES.map((supply) => (
