@@ -1,12 +1,13 @@
 function ScheduleModal({ operator, isFriday, onClose }) {
   if (!operator) return null;
+  const { useState, useMemo } = React;
   const [filterRoute, setFilterRoute] = useState('ALL');
   const rawSchedule = isFriday ? operator.fridaySchedule : operator.regularSchedule;
-  
-  // Auto-select dynamically active vessel (or fallback to vessel 0)
+
   const activeVessel = operator.vessels?.find(v => v.isActive) || operator.vessels?.[0];
 
   const modalSchedule = useMemo(() => {
+    if (!rawSchedule) return [];
     if (filterRoute === 'ALL') return rawSchedule;
     return rawSchedule.filter((item) => item.route === filterRoute);
   }, [rawSchedule, filterRoute]);
@@ -69,7 +70,7 @@ function ScheduleModal({ operator, isFriday, onClose }) {
             <div>
               <span className="text-slate-400 block text-[10px] uppercase font-bold mb-1">Hotline Contacts</span>
               <div className="flex gap-2">
-                {operator.booking.map((phone, i) => (
+                {operator.booking?.map((phone, i) => (
                   <a key={i} href={`tel:${phone}`} className="font-bold text-slate-800 bg-white px-2.5 py-1 rounded-lg border border-slate-200 hover:border-sky-500 transition-colors">
                     📞 {phone}
                   </a>
@@ -138,3 +139,6 @@ function ScheduleModal({ operator, isFriday, onClose }) {
     </div>
   );
 }
+
+// Attach component to global window object
+window.ScheduleModal = ScheduleModal;
