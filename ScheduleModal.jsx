@@ -1,10 +1,10 @@
-import React, { useState, useMemo } from 'react';
-
-export default function ScheduleModal({ operator, isFriday, onClose }) {
+function ScheduleModal({ operator, isFriday, onClose }) {
   if (!operator) return null;
-  
   const [filterRoute, setFilterRoute] = useState('ALL');
   const rawSchedule = isFriday ? operator.fridaySchedule : operator.regularSchedule;
+  
+  // Auto-select dynamically active vessel (or fallback to vessel 0)
+  const activeVessel = operator.vessels?.find(v => v.isActive) || operator.vessels?.[0];
 
   const modalSchedule = useMemo(() => {
     if (filterRoute === 'ALL') return rawSchedule;
@@ -14,8 +14,6 @@ export default function ScheduleModal({ operator, isFriday, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm transition-opacity">
       <div className="relative w-full max-w-md bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden text-slate-800 border border-slate-100 max-h-[85vh] flex flex-col">
-        
-        {/* Modal Header */}
         <div className="p-5 border-b border-slate-100 bg-slate-50 flex items-start justify-between">
           <div>
             <span className="text-[10px] uppercase font-bold tracking-wider text-sky-600 bg-sky-100 px-2.5 py-0.5 rounded-full">
@@ -32,8 +30,30 @@ export default function ScheduleModal({ operator, isFriday, onClose }) {
           </button>
         </div>
 
-        {/* Modal Body */}
         <div className="p-5 overflow-y-auto space-y-4">
+          {activeVessel && (
+            <a
+              href={activeVessel.trackingUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center justify-between p-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl shadow-md transition-colors"
+            >
+              <div className="flex items-center gap-2.5">
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-300 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
+                </span>
+                <div>
+                  <span className="text-xs font-black uppercase tracking-wider block leading-none">
+                    🟢 {activeVessel.name} • Live Location
+                  </span>
+                  <span className="text-[10px] text-emerald-100 font-medium">FollowMe.mv Marine GPS</span>
+                </div>
+              </div>
+              <span className="text-xs font-bold bg-white/20 px-2.5 py-1 rounded-lg">View ↗</span>
+            </a>
+          )}
+
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
               <span className="text-slate-400 block text-[10px] uppercase font-bold">One Way</span>
@@ -47,7 +67,7 @@ export default function ScheduleModal({ operator, isFriday, onClose }) {
 
           <div className="space-y-2 bg-slate-50 p-3.5 rounded-2xl border border-slate-100 text-xs">
             <div>
-              <span className="text-slate-400 block text-[10px] uppercase font-bold mb-0.5">Hotline Contacts</span>
+              <span className="text-slate-400 block text-[10px] uppercase font-bold mb-1">Hotline Contacts</span>
               <div className="flex gap-2">
                 {operator.booking.map((phone, i) => (
                   <a key={i} href={`tel:${phone}`} className="font-bold text-slate-800 bg-white px-2.5 py-1 rounded-lg border border-slate-200 hover:border-sky-500 transition-colors">
