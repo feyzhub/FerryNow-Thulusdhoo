@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ferry & Speedboat Schedules</title>
+  <title>Thulusdhoo Ferry & Speedboat Schedules</title>
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -12,7 +12,7 @@
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 
-  <!-- Babel CDN for compiling JSX in browser -->
+  <!-- Babel CDN for inline JSX -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
 <body class="bg-slate-100">
@@ -93,7 +93,7 @@
               <div className="space-y-2 bg-slate-50 p-3.5 rounded-2xl border border-slate-100 text-xs">
                 <div>
                   <span className="text-slate-400 block text-[10px] uppercase font-bold mb-1">Hotline Contacts</span>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     {operator.booking?.map((phone, i) => (
                       <a key={i} href={`tel:${phone}`} className="font-bold text-slate-800 bg-white px-2.5 py-1 rounded-lg border border-slate-200 hover:border-sky-500 transition-colors">
                         📞 {phone}
@@ -164,45 +164,156 @@
       );
     }
 
-    // --- OPERATORS DATA ---
+    // --- FULL OPERATORS & LOCAL FERRIES DATA ---
     const OPERATORS_DATA = [
       {
-        id: 'mta',
-        name: 'MTA Speedboat',
+        id: 'tharika-express',
+        name: 'Tharika Express',
         tag: 'Speedboat',
-        description: 'Daily scheduled transfers between Malé, Airport, and Thulusdhoo.',
-        fareOneWay: '$25 / MVR 385',
-        fareRoundTrip: '$50 / MVR 770',
+        description: 'Scheduled speedboat transfers between Malé / Airport and Thulusdhoo.',
+        fareOneWay: 'MVR 175',
+        fareRoundTrip: 'MVR 300',
         booking: ['+960 7771234', '+960 7775678'],
-        website: 'mta.mv',
+        website: 'tharika.mv',
         vessels: [
           {
-            name: 'MTA Express 1',
+            name: 'Tharika Express 1',
             isActive: true,
             trackingUrl: 'https://followme.mv'
           }
         ],
         regularSchedule: [
-          { id: 's1', time: '09:30 AM', departure: 'Malé', destination: 'Thulusdhoo', route: 'MALE_TO_THULUSDHOO' },
-          { id: 's2', time: '02:30 PM', departure: 'Thulusdhoo', destination: 'Malé', route: 'THULUSDHOO_TO_MALE' }
+          { id: 'te1', time: '08:30 AM', departure: 'Thulusdhoo', destination: 'Malé', route: 'THULUSDHOO_TO_MALE' },
+          { id: 'te2', time: '11:30 AM', departure: 'Malé', destination: 'Thulusdhoo', route: 'MALE_TO_THULUSDHOO' },
+          { id: 'te3', time: '02:30 PM', departure: 'Thulusdhoo', destination: 'Malé', route: 'THULUSDHOO_TO_MALE' },
+          { id: 'te4', time: '04:30 PM', departure: 'Malé', destination: 'Thulusdhoo', route: 'MALE_TO_THULUSDHOO' }
         ],
         fridaySchedule: [
-          { id: 'f1', time: '09:00 AM', departure: 'Malé', destination: 'Thulusdhoo', route: 'MALE_TO_THULUSDHOO' },
-          { id: 'f2', time: '03:00 PM', departure: 'Thulusdhoo', destination: 'Malé', route: 'THULUSDHOO_TO_MALE' }
+          { id: 'tef1', time: '08:30 AM', departure: 'Thulusdhoo', destination: 'Malé', route: 'THULUSDHOO_TO_MALE' },
+          { id: 'tef2', time: '03:00 PM', departure: 'Malé', destination: 'Thulusdhoo', route: 'MALE_TO_THULUSDHOO' }
         ]
+      },
+      {
+        id: 'refcool-marine',
+        name: 'Refcool Marine',
+        tag: 'Speedboat',
+        description: 'Daily passenger speedboat service connecting Malé and Thulusdhoo.',
+        fareOneWay: 'MVR 200',
+        fareRoundTrip: 'MVR 400',
+        booking: ['+960 7901234'],
+        website: 'refcool.mv',
+        vessels: [
+          {
+            name: 'Refcool Express',
+            isActive: true,
+            trackingUrl: 'https://followme.mv'
+          }
+        ],
+        regularSchedule: [
+          { id: 'rc1', time: '09:00 AM', departure: 'Malé', destination: 'Thulusdhoo', route: 'MALE_TO_THULUSDHOO' },
+          { id: 'rc2', time: '03:30 PM', departure: 'Thulusdhoo', destination: 'Malé', route: 'THULUSDHOO_TO_MALE' }
+        ],
+        fridaySchedule: [
+          { id: 'rcf1', time: '09:00 AM', departure: 'Malé', destination: 'Thulusdhoo', route: 'MALE_TO_THULUSDHOO' },
+          { id: 'rcf2', time: '04:00 PM', departure: 'Thulusdhoo', destination: 'Malé', route: 'THULUSDHOO_TO_MALE' }
+        ]
+      },
+      {
+        id: 'river-speed',
+        name: 'River Speed',
+        tag: 'Speedboat',
+        description: 'Fast passenger transfer service between Malé and Thulusdhoo.',
+        fareOneWay: 'MVR 200',
+        fareRoundTrip: 'MVR 400',
+        booking: ['+960 7881234'],
+        website: '',
+        vessels: [
+          {
+            name: 'River Speed 1',
+            isActive: true,
+            trackingUrl: 'https://followme.mv'
+          }
+        ],
+        regularSchedule: [
+          { id: 'rs1', time: '10:00 AM', departure: 'Malé', destination: 'Thulusdhoo', route: 'MALE_TO_THULUSDHOO' },
+          { id: 'rs2', time: '04:30 PM', departure: 'Thulusdhoo', destination: 'Malé', route: 'THULUSDHOO_TO_MALE' }
+        ],
+        fridaySchedule: [
+          { id: 'rsf1', time: '09:30 AM', departure: 'Malé', destination: 'Thulusdhoo', route: 'MALE_TO_THULUSDHOO' },
+          { id: 'rsf2', time: '05:00 PM', departure: 'Thulusdhoo', destination: 'Malé', route: 'THULUSDHOO_TO_MALE' }
+        ]
+      },
+      {
+        id: 'tharika-2',
+        name: 'Tharika 2 (Cargo / Supply)',
+        tag: 'Supply Vessel',
+        description: 'Local island supply ferry carrying cargo and heavy goods between Malé & Thulusdhoo.',
+        fareOneWay: 'Contact Operator',
+        fareRoundTrip: 'Contact Operator',
+        booking: ['+960 7779999'],
+        website: '',
+        vessels: [
+          {
+            name: 'Tharika 2',
+            isActive: true,
+            trackingUrl: 'https://followme.mv'
+          }
+        ],
+        regularSchedule: [
+          { id: 't2-1', time: '05:30 PM', departure: 'Malé', destination: 'Thulusdhoo', route: 'MALE_TO_THULUSDHOO' }
+        ],
+        fridaySchedule: []
+      },
+      {
+        id: 'ali-rasthaa',
+        name: 'Ali Rasthaa (Cargo / Supply)',
+        tag: 'Supply Vessel',
+        description: 'Island cargo and logistics supply ferry.',
+        fareOneWay: 'Contact Operator',
+        fareRoundTrip: 'Contact Operator',
+        booking: ['+960 7788888'],
+        website: '',
+        vessels: [
+          {
+            name: 'Ali Rasthaa',
+            isActive: true,
+            trackingUrl: 'https://followme.mv'
+          }
+        ],
+        regularSchedule: [
+          { id: 'ar1', time: '06:00 PM', departure: 'Malé', destination: 'Thulusdhoo', route: 'MALE_TO_THULUSDHOO' }
+        ],
+        fridaySchedule: []
       }
     ];
 
-    // --- HOME APPLICATION COMPONENT ---
-    function Home({ operators = OPERATORS_DATA, isFriday = false }) {
+    // --- MAIN HOME COMPONENT ---
+    function Home({ operators = OPERATORS_DATA }) {
       const [selectedOperator, setSelectedOperator] = useState(null);
+      const [isFriday, setIsFriday] = useState(false);
 
       return (
         <main className="min-h-screen bg-slate-100 p-4 sm:p-8">
           <div className="max-w-4xl mx-auto space-y-6">
-            <header className="text-center space-y-2">
-              <h1 className="text-3xl font-black text-slate-900">Ferry & Speedboat Schedules</h1>
-              <p className="text-sm text-slate-500">Select an operator to view timetables, tracking, and hotline contacts.</p>
+            <header className="text-center space-y-3">
+              <h1 className="text-3xl font-black text-slate-900">Thulusdhoo Ferry & Speedboat Schedules</h1>
+              <p className="text-sm text-slate-500">View timetable, live GPS tracking, fares, and hotline contacts for local ferries and speedboats.</p>
+              
+              <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-2xl border border-slate-200 shadow-sm mt-2">
+                <span className="text-xs font-bold text-slate-600">Day Schedule:</span>
+                <button
+                  onClick={() => setIsFriday(false)}
+                  className={`px-3 py-1 rounded-xl text-xs font-bold transition-all ${!isFriday ? 'bg-sky-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                >
+                  Sat – Thu
+                </button>
+                <button
+                  onClick={() => setIsFriday(true)}
+                  className={`px-3 py-1 rounded-xl text-xs font-bold transition-all ${isFriday ? 'bg-amber-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                >
+                  Friday
+                </button>
+              </div>
             </header>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -212,9 +323,12 @@
                   className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between"
                 >
                   <div>
-                    <span className="text-[10px] uppercase font-bold tracking-wider text-sky-600 bg-sky-100 px-2.5 py-0.5 rounded-full">
-                      {operator.tag}
-                    </span>
+                    <div className="flex justify-between items-start">
+                      <span className={`text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full ${operator.tag === 'Supply Vessel' ? 'bg-amber-100 text-amber-700' : 'bg-sky-100 text-sky-600'}`}>
+                        {operator.tag}
+                      </span>
+                      <span className="text-xs font-extrabold text-emerald-600">{operator.fareOneWay}</span>
+                    </div>
                     <h2 className="text-lg font-bold text-slate-900 mt-2">{operator.name}</h2>
                     <p className="text-xs text-slate-500 mt-1">{operator.description}</p>
                   </div>
@@ -223,7 +337,7 @@
                     onClick={() => setSelectedOperator(operator)}
                     className="mt-4 w-full py-2.5 text-xs font-bold text-slate-800 bg-slate-100 hover:bg-sky-500 hover:text-white rounded-xl transition-colors"
                   >
-                    View Schedule & Details
+                    View Timetable & Hotline
                   </button>
                 </div>
               ))}
