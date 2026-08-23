@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Thulusdhoo Ferry Transport V2</title>
+  <title>Thulusdhoo Express Transit</title>
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -14,9 +14,6 @@
 
   <!-- Babel Compiler -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
-  <!-- External Schedules Data File -->
-  <script src="./schedulesData.js"></script>
 
   <style>
     @keyframes rain {
@@ -52,6 +49,96 @@
 
   <script type="text/babel">
     const { useState, useEffect, useMemo, useCallback } = React;
+
+    // OPERATORS SETUP: Tharika Express, Refcool Marine, River Speed
+    const OPERATORS_DATA = [
+      {
+        id: 'tharika-express',
+        name: 'Tharika Express',
+        shortName: 'Tharika',
+        tag: 'Speedboat',
+        dotColor: 'bg-amber-500',
+        description: 'Daily express speedboat transfers between Malé and Thulusdhoo.',
+        fareOneWay: '$25 / MVR 385',
+        fareRoundTrip: '$50 / MVR 770',
+        booking: ['7770000', '7990000'],
+        vessels: [
+          { name: 'Tharika 1', isActive: true, trackingUrl: 'https://followme.mv' }
+        ],
+        regularSchedule: [
+          { id: 'te-1', route: 'MALE_TO_THULUSDHOO', time: '11:30 AM', time24: '11:30', departure: 'Malé', destination: 'Thulusdhoo' },
+          { id: 'te-2', route: 'MALE_TO_THULUSDHOO', time: '04:30 PM', time24: '16:30', departure: 'Malé', destination: 'Thulusdhoo' },
+          { id: 'te-3', route: 'THULUSDHOO_TO_MALE', time: '08:00 AM', time24: '08:00', departure: 'Thulusdhoo', destination: 'Malé' },
+          { id: 'te-4', route: 'THULUSDHOO_TO_MALE', time: '02:30 PM', time24: '14:30', departure: 'Thulusdhoo', destination: 'Malé' }
+        ],
+        fridaySchedule: [
+          { id: 'te-f1', route: 'MALE_TO_THULUSDHOO', time: '03:00 PM', time24: '15:00', departure: 'Malé', destination: 'Thulusdhoo' },
+          { id: 'te-f2', route: 'THULUSDHOO_TO_MALE', time: '08:00 AM', time24: '08:00', departure: 'Thulusdhoo', destination: 'Malé' }
+        ]
+      },
+      {
+        id: 'refcool-marine',
+        name: 'Refcool Marine',
+        shortName: 'Refcool',
+        tag: 'Speedboat',
+        dotColor: 'bg-sky-500',
+        description: 'Scheduled speedboat passenger service.',
+        fareOneWay: '$25 / MVR 385',
+        fareRoundTrip: '$50 / MVR 770',
+        booking: ['7955550', '7775550'],
+        vessels: [
+          { name: 'Refcool 1', isActive: true, trackingUrl: 'https://followme.mv' }
+        ],
+        regularSchedule: [
+          { id: 'rm-1', route: 'MALE_TO_THULUSDHOO', time: '12:00 PM', time24: '12:00', departure: 'Malé', destination: 'Thulusdhoo' },
+          { id: 'rm-2', route: 'MALE_TO_THULUSDHOO', time: '05:00 PM', time24: '17:00', departure: 'Malé', destination: 'Thulusdhoo' },
+          { id: 'rm-3', route: 'THULUSDHOO_TO_MALE', time: '07:30 AM', time24: '07:30', departure: 'Thulusdhoo', destination: 'Malé' },
+          { id: 'rm-4', route: 'THULUSDHOO_TO_MALE', time: '01:30 PM', time24: '13:30', departure: 'Thulusdhoo', destination: 'Malé' }
+        ],
+        fridaySchedule: [
+          { id: 'rm-f1', route: 'MALE_TO_THULUSDHOO', time: '03:30 PM', time24: '15:30', departure: 'Malé', destination: 'Thulusdhoo' },
+          { id: 'rm-f2', route: 'THULUSDHOO_TO_MALE', time: '08:30 AM', time24: '08:30', departure: 'Thulusdhoo', destination: 'Malé' }
+        ]
+      },
+      {
+        id: 'river-speed',
+        name: 'River Speed',
+        shortName: 'River Speed',
+        tag: 'Speedboat',
+        dotColor: 'bg-emerald-500',
+        description: 'Daily express passenger transfers.',
+        fareOneWay: '$25 / MVR 385',
+        fareRoundTrip: '$50 / MVR 770',
+        booking: ['7791880', '7981880'],
+        website: 'riverspeed.mv',
+        vessels: [
+          { name: 'River Speed 1', isActive: true, trackingUrl: 'https://followme.mv' }
+        ],
+        regularSchedule: [
+          { id: 'rs-1', route: 'MALE_TO_THULUSDHOO', time: '03:00 PM', time24: '15:00', departure: 'Malé', destination: 'Thulusdhoo' },
+          { id: 'rs-2', route: 'MALE_TO_THULUSDHOO', time: '10:00 PM', time24: '22:00', departure: 'Malé', destination: 'Thulusdhoo' },
+          { id: 'rs-3', route: 'THULUSDHOO_TO_MALE', time: '04:30 PM', time24: '16:30', departure: 'Thulusdhoo', destination: 'Malé' },
+          { id: 'rs-4', route: 'THULUSDHOO_TO_MALE', time: '07:30 PM', time24: '19:30', departure: 'Thulusdhoo', destination: 'Malé' }
+        ],
+        fridaySchedule: [
+          { id: 'rs-f1', route: 'MALE_TO_THULUSDHOO', time: '09:30 AM', time24: '09:30', departure: 'Malé', destination: 'Thulusdhoo' },
+          { id: 'rs-f2', route: 'MALE_TO_THULUSDHOO', time: '10:00 PM', time24: '22:00', departure: 'Malé', destination: 'Thulusdhoo' }
+        ]
+      }
+    ];
+
+    const SUPPLY_FERRIES_DATA = [
+      {
+        id: 'supply-boat',
+        name: 'Thulusdhoo Cargo Vessel',
+        tag: 'Cargo & Supply',
+        days: ['Sunday', 'Tuesday', 'Thursday'],
+        thulusdhooTime: '06:00 AM',
+        maleTime: '01:00 PM',
+        contacts: ['7771234', '7991234'],
+        liveTrackingUrl: 'https://followme.mv'
+      }
+    ];
 
     const decodeWeatherCode = (code) => {
       switch (code) {
@@ -299,14 +386,6 @@
                     ))}
                   </div>
                 </div>
-                {operator.website && (
-                  <div className="pt-1">
-                    <span className="text-slate-400 font-medium">Website: </span>
-                    <a href={`https://${operator.website}`} target="_blank" rel="noreferrer" className="text-sky-600 font-bold underline">
-                      {operator.website}
-                    </a>
-                  </div>
-                )}
               </div>
 
               <div className="flex gap-1 bg-slate-100 p-1 rounded-xl text-[11px] font-bold">
@@ -363,15 +442,9 @@
     }
 
     function App() {
-      // Direct load from window object with fallback
-      const getInitialOperators = () => 
-  (typeof INITIAL_FERRY_OPERATORS !== 'undefined' ? INITIAL_FERRY_OPERATORS : window.INITIAL_FERRY_OPERATORS) || [];
+      const operators = OPERATORS_DATA;
+      const supplyFerries = SUPPLY_FERRIES_DATA;
 
-const getInitialSupply = () => 
-  (typeof SUPPLY_FERRIES !== 'undefined' ? SUPPLY_FERRIES : window.SUPPLY_FERRIES) || [];
-
-      const [operators, setOperators] = useState(getInitialOperators);
-      const [supplyFerries, setSupplyFerries] = useState(getInitialSupply);
       const [selectedOperator, setSelectedOperator] = useState(null);
       const [selectedSupplyFerry, setSelectedSupplyFerry] = useState(null);
       const [activeRoute, setActiveRoute] = useState('MALE_TO_THULUSDHOO');
@@ -383,16 +456,6 @@ const getInitialSupply = () =>
         isBadWeather: false,
         type: 'cloudy'
       });
-
-      // Sync window data if script loaded slightly after initial render
-      useEffect(() => {
-        if (operators.length === 0 && window.INITIAL_FERRY_OPERATORS) {
-          setOperators(window.INITIAL_FERRY_OPERATORS);
-        }
-        if (supplyFerries.length === 0 && window.SUPPLY_FERRIES) {
-          setSupplyFerries(window.SUPPLY_FERRIES);
-        }
-      }, []);
 
       useEffect(() => {
         const timer = setInterval(() => setNow(new Date()), 1000);
