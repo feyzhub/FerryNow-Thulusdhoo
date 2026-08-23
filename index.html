@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Thulusdhoo Express Transit</title>
+  <title>Thulusdhoo Ferry Transport V2</title>
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -15,6 +15,7 @@
   <!-- Babel Compiler -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
+  <!-- Custom CSS for Weather Animations & Fade Mask -->
   <style>
     @keyframes rain {
       0% { transform: translateY(-100%) translateX(0); opacity: 0; }
@@ -34,11 +35,13 @@
     .animate-cloud { animation: cloudDrift 16s ease-in-out infinite; }
     .animate-sun { animation: sunGlow 4s ease-in-out infinite; }
 
+    /* Smooth top fade for bottom image */
     .fade-to-top-mask {
       mask-image: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 50%, rgba(0,0,0,0) 100%);
       -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 50%, rgba(0,0,0,0) 100%);
     }
 
+    /* Hide Scrollbar for clean Operator Bar */
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
@@ -50,95 +53,184 @@
   <script type="text/babel">
     const { useState, useEffect, useMemo, useCallback } = React;
 
-    // OPERATORS SETUP: Tharika Express, Refcool Marine, River Speed
-    const OPERATORS_DATA = [
+    // --- OPERATOR DATA WITH DYNAMIC LIVE VESSEL TRACKING ---
+    const INITIAL_FERRY_OPERATORS = [
       {
-        id: 'tharika-express',
-        name: 'Tharika Express',
-        shortName: 'Tharika',
-        tag: 'Speedboat',
-        dotColor: 'bg-amber-500',
-        description: 'Daily express speedboat transfers between Malé and Thulusdhoo.',
-        fareOneWay: '$25 / MVR 385',
-        fareRoundTrip: '$50 / MVR 770',
-        booking: ['7770000', '7990000'],
+        id: "tharika",
+        name: "Tharika Express",
+        shortName: "Tharika",
+        dotColor: "bg-emerald-500",
+        tag: "Speedboat",
+        description: "Scheduled speedboat transfer between Malé & Thulusdhoo.",
+        booking: ["7810052", "7810078"],
+        fareOneWay: "MVR 175",
+        fareRoundTrip: "MVR 300",
         vessels: [
-          { name: 'Tharika 1', isActive: true, trackingUrl: 'https://followme.mv' }
+          { name: "Tharika 1", trackingUrl: "https://m.followme.mv/public/?id=19122", isActive: false, status: "checking" },
+          { name: "Tharika 5", trackingUrl: "https://m.followme.mv/public/?id=19093", isActive: false, status: "checking" }
         ],
         regularSchedule: [
-          { id: 'te-1', route: 'MALE_TO_THULUSDHOO', time: '11:30 AM', time24: '11:30', departure: 'Malé', destination: 'Thulusdhoo' },
-          { id: 'te-2', route: 'MALE_TO_THULUSDHOO', time: '04:30 PM', time24: '16:30', departure: 'Malé', destination: 'Thulusdhoo' },
-          { id: 'te-3', route: 'THULUSDHOO_TO_MALE', time: '08:00 AM', time24: '08:00', departure: 'Thulusdhoo', destination: 'Malé' },
-          { id: 'te-4', route: 'THULUSDHOO_TO_MALE', time: '02:30 PM', time24: '14:30', departure: 'Thulusdhoo', destination: 'Malé' }
+          { id: "t1", time: "09:15", time24: "09:15", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "t2", time: "12:15", time24: "12:15", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "t3", time: "16:00", time24: "16:00", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "t4", time: "18:30", time24: "18:30", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "t5", time: "22:15", time24: "22:15", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "t6", time: "08:00", time24: "08:00", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+          { id: "t7", time: "10:15", time24: "10:15", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+          { id: "t8", time: "14:15", time24: "14:15", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+          { id: "t9", time: "17:00", time24: "17:00", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+          { id: "t10", time: "20:00", time24: "20:00", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
         ],
         fridaySchedule: [
-          { id: 'te-f1', route: 'MALE_TO_THULUSDHOO', time: '03:00 PM', time24: '15:00', departure: 'Malé', destination: 'Thulusdhoo' },
-          { id: 'te-f2', route: 'THULUSDHOO_TO_MALE', time: '08:00 AM', time24: '08:00', departure: 'Thulusdhoo', destination: 'Malé' }
+          { id: "tf1", time: "09:15", time24: "09:15", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "tf2", time: "16:00", time24: "16:00", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "tf3", time: "18:30", time24: "18:30", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "tf4", time: "22:15", time24: "22:15", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "tf5", time: "08:00", time24: "08:00", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+          { id: "tf6", time: "14:30", time24: "14:30", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+          { id: "tf7", time: "17:00", time24: "17:00", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+          { id: "tf8", time: "20:00", time24: "20:00", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
         ]
       },
       {
-        id: 'refcool-marine',
-        name: 'Refcool Marine',
-        shortName: 'Refcool',
-        tag: 'Speedboat',
-        dotColor: 'bg-sky-500',
-        description: 'Scheduled speedboat passenger service.',
-        fareOneWay: '$25 / MVR 385',
-        fareRoundTrip: '$50 / MVR 770',
-        booking: ['7955550', '7775550'],
+        id: "refcool",
+        name: "Refcool Marine",
+        shortName: "Refcool",
+        dotColor: "bg-sky-500",
+        tag: "Express",
+        description: "Fast passenger speedboat express.",
+        booking: ["7316362", "7312050"],
+        website: "refcoolmarine.mv",
+        fareOneWay: "MVR 175",
+        fareRoundTrip: "MVR 300",
         vessels: [
-          { name: 'Refcool 1', isActive: true, trackingUrl: 'https://followme.mv' }
+          { name: "Refcool 1", trackingUrl: "https://m.followme.mv/public/14166", isActive: false, status: "checking" },
+          { name: "Refcool 2", trackingUrl: "https://m.followme.mv/public/14204", isActive: false, status: "checking" }
         ],
         regularSchedule: [
-          { id: 'rm-1', route: 'MALE_TO_THULUSDHOO', time: '12:00 PM', time24: '12:00', departure: 'Malé', destination: 'Thulusdhoo' },
-          { id: 'rm-2', route: 'MALE_TO_THULUSDHOO', time: '05:00 PM', time24: '17:00', departure: 'Malé', destination: 'Thulusdhoo' },
-          { id: 'rm-3', route: 'THULUSDHOO_TO_MALE', time: '07:30 AM', time24: '07:30', departure: 'Thulusdhoo', destination: 'Malé' },
-          { id: 'rm-4', route: 'THULUSDHOO_TO_MALE', time: '01:30 PM', time24: '13:30', departure: 'Thulusdhoo', destination: 'Malé' }
+          { id: "r1", time: "09:15", time24: "09:15", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "r2", time: "12:30", time24: "12:30", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "r3", time: "15:30", time24: "15:30", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "r4", time: "18:30", time24: "18:30", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "r5", time: "22:00", time24: "22:00", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "r6", time: "08:00", time24: "08:00", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+          { id: "r7", time: "11:00", time24: "11:00", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+          { id: "r8", time: "14:30", time24: "14:30", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+          { id: "r9", time: "17:30", time24: "17:30", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+          { id: "r10", time: "20:30", time24: "20:30", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
         ],
         fridaySchedule: [
-          { id: 'rm-f1', route: 'MALE_TO_THULUSDHOO', time: '03:30 PM', time24: '15:30', departure: 'Malé', destination: 'Thulusdhoo' },
-          { id: 'rm-f2', route: 'THULUSDHOO_TO_MALE', time: '08:30 AM', time24: '08:30', departure: 'Thulusdhoo', destination: 'Malé' }
+          { id: "rf1", time: "09:15", time24: "09:15", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "rf2", time: "15:30", time24: "15:30", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "rf3", time: "18:30", time24: "18:30", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "rf4", time: "22:00", time24: "22:00", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "rf5", time: "08:00", time24: "08:00", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+          { id: "rf6", time: "14:30", time24: "14:30", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+          { id: "rf7", time: "17:00", time24: "17:00", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+          { id: "rf8", time: "20:00", time24: "20:00", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
         ]
       },
       {
-        id: 'river-speed',
-        name: 'River Speed',
-        shortName: 'River Speed',
-        tag: 'Speedboat',
-        dotColor: 'bg-emerald-500',
-        description: 'Daily express passenger transfers.',
-        fareOneWay: '$25 / MVR 385',
-        fareRoundTrip: '$50 / MVR 770',
-        booking: ['7791880', '7981880'],
-        website: 'riverspeed.mv',
+        id: "riverspeed",
+        name: "River Speed",
+        shortName: "River Speed",
+        dotColor: "bg-rose-500",
+        tag: "Atoll Express",
+        description: "Atoll speedboat express transfers.",
+        booking: ["9893434", "9143434"],
+        email: "riverspeed3434@gmail.com",
+        fareOneWay: "MVR 175",
+        fareRoundTrip: "MVR 300",
         vessels: [
-          { name: 'River Speed 1', isActive: true, trackingUrl: 'https://followme.mv' }
+          { name: "River Speed 1", trackingUrl: "https://m.followme.mv/public/11334", isActive: false, status: "checking" },
+          { name: "River Speed 5", trackingUrl: "https://m.followme.mv/public/8739", isActive: false, status: "checking" }
         ],
         regularSchedule: [
-          { id: 'rs-1', route: 'MALE_TO_THULUSDHOO', time: '03:00 PM', time24: '15:00', departure: 'Malé', destination: 'Thulusdhoo' },
-          { id: 'rs-2', route: 'MALE_TO_THULUSDHOO', time: '10:00 PM', time24: '22:00', departure: 'Malé', destination: 'Thulusdhoo' },
-          { id: 'rs-3', route: 'THULUSDHOO_TO_MALE', time: '04:30 PM', time24: '16:30', departure: 'Thulusdhoo', destination: 'Malé' },
-          { id: 'rs-4', route: 'THULUSDHOO_TO_MALE', time: '07:30 PM', time24: '19:30', departure: 'Thulusdhoo', destination: 'Malé' }
+          { id: "rv1", time: "09:20", time24: "09:20", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "rv2", time: "12:20", time24: "12:20", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "rv3", time: "16:20", time24: "16:20", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "rv4", time: "20:20", time24: "20:20", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "rv5", time: "22:15", time24: "22:15", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "rv6", time: "08:00", time24: "08:00", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+          { id: "rv7", time: "10:30", time24: "10:30", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+          { id: "rv8", time: "14:30", time24: "14:30", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+          { id: "rv9", time: "18:30", time24: "18:30", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
         ],
         fridaySchedule: [
-          { id: 'rs-f1', route: 'MALE_TO_THULUSDHOO', time: '09:30 AM', time24: '09:30', departure: 'Malé', destination: 'Thulusdhoo' },
-          { id: 'rs-f2', route: 'MALE_TO_THULUSDHOO', time: '10:00 PM', time24: '22:00', departure: 'Malé', destination: 'Thulusdhoo' }
+          { id: "rvf1", time: "09:30", time24: "09:30", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "rvf2", time: "15:00", time24: "15:00", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "rvf3", time: "21:00", time24: "21:00", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "rvf4", time: "08:00", time24: "08:00", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+          { id: "rvf5", time: "14:00", time24: "14:00", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
         ]
+      },
+      {
+        id: "mtcc_public",
+        name: "MTCC Public Ferry (Route 301)",
+        shortName: "MTCC",
+        dotColor: "bg-indigo-500",
+        tag: "Public Ferry",
+        description: "Government public ferry (slow ferry). Stops at Himmafushi & Huraa.",
+        booking: ["1920"],
+        website: "rtl.mv",
+        fareOneWay: "MVR 22",
+        fareRoundTrip: "MVR 44",
+        vessels: [
+          { name: "RTL / MTCC Vessel", trackingUrl: "https://rtl.mv/", isActive: true, status: "online" }
+        ],
+        regularSchedule: [
+          { id: "mt1", time: "14:30", time24: "14:30", route: "MALE_TO_THULUSDHOO", departure: "Malé", destination: "Thulusdhoo" },
+          { id: "mt2", time: "07:30", time24: "07:30", route: "THULUSDHOO_TO_MALE", departure: "Thulusdhoo", destination: "Malé" },
+        ],
+        fridaySchedule: []
       }
     ];
 
-    const SUPPLY_FERRIES_DATA = [
+    const SUPPLY_FERRIES = [
       {
-        id: 'supply-boat',
-        name: 'Thulusdhoo Cargo Vessel',
-        tag: 'Cargo & Supply',
-        days: ['Sunday', 'Tuesday', 'Thursday'],
-        thulusdhooTime: '06:00 AM',
-        maleTime: '01:00 PM',
-        contacts: ['7771234', '7991234'],
-        liveTrackingUrl: 'https://followme.mv'
+        id: "tharika2",
+        name: "Tharika 2",
+        tag: "Cargo / Supply",
+        days: ["Sunday", "Wednesday", "Thursday", "Saturday"],
+        thulusdhooTime: "07:30",
+        maleTime: "14:30",
+        contacts: ["7761077"],
+        liveTrackingUrl: "https://m.followme.mv/public/?id=17852"
+      },
+      {
+        id: "alirasthaa",
+        name: "Ali Rasthaa",
+        tag: "Cargo / Supply",
+        days: ["Sunday", "Monday", "Wednesday", "Saturday"],
+        thulusdhooTime: "05:30",
+        maleTime: "14:30",
+        contacts: ["7359807", "7748865"],
+        liveTrackingUrl: "https://m.followme.mv/public/18695"
       }
     ];
+
+    // Helper: Check FollowMe status using CORS proxy scraper
+    async function checkFollowMeStatus(trackingUrl) {
+      if (!trackingUrl || !trackingUrl.includes('followme.mv')) return false;
+      try {
+        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(trackingUrl)}`;
+        const response = await fetch(proxyUrl);
+        if (!response.ok) return false;
+        const data = await response.json();
+        const html = data.contents || "";
+        
+        // Detect green indicators on FollowMe page (online status badges, green color codes, or live GPS indicators)
+        const isOnline = html.includes('#00FF00') || 
+                         html.includes('#00ff00') || 
+                         html.toLowerCase().includes('status: online') || 
+                         html.toLowerCase().includes('tracking online') || 
+                         html.toLowerCase().includes('active');
+        return isOnline;
+      } catch (err) {
+        console.warn('FollowMe proxy check failed for', trackingUrl, err);
+        return false;
+      }
+    }
 
     const decodeWeatherCode = (code) => {
       switch (code) {
@@ -249,7 +341,7 @@
                 <span className="text-slate-400 block text-[10px] uppercase font-bold mb-2">Operating Days</span>
                 <div className="flex flex-wrap gap-1.5">
                   {["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((day) => {
-                    const isActive = ferry.days?.includes(day);
+                    const isActive = ferry.days.includes(day);
                     return (
                       <span
                         key={day}
@@ -288,7 +380,7 @@
               <div className="space-y-2 bg-slate-50 p-3.5 rounded-2xl border border-slate-100 text-xs">
                 <span className="text-slate-400 block text-[10px] uppercase font-bold mb-1">Contact Numbers</span>
                 <div className="flex flex-wrap gap-2">
-                  {ferry.contacts?.map((phone, i) => (
+                  {ferry.contacts.map((phone, i) => (
                     <a key={i} href={`tel:${phone}`} className="font-bold text-slate-800 bg-white px-3 py-1.5 rounded-xl border border-slate-200 hover:border-amber-500 transition-colors shadow-sm">
                       📞 {phone}
                     </a>
@@ -313,7 +405,9 @@
     function ScheduleModal({ operator, isFriday, onClose }) {
       if (!operator) return null;
       const [filterRoute, setFilterRoute] = useState('ALL');
-      const rawSchedule = isFriday ? (operator.fridaySchedule || []) : (operator.regularSchedule || []);
+      const rawSchedule = isFriday ? operator.fridaySchedule : operator.regularSchedule;
+      
+      // Auto-select dynamically active vessel (or fallback to vessel 0)
       const activeVessel = operator.vessels?.find(v => v.isActive) || operator.vessels?.[0];
 
       const modalSchedule = useMemo(() => {
@@ -379,13 +473,21 @@
                 <div>
                   <span className="text-slate-400 block text-[10px] uppercase font-bold mb-1">Hotline Contacts</span>
                   <div className="flex gap-2">
-                    {operator.booking?.map((phone, i) => (
+                    {operator.booking.map((phone, i) => (
                       <a key={i} href={`tel:${phone}`} className="font-bold text-slate-800 bg-white px-3 py-1 rounded-lg border border-slate-200 hover:border-sky-500 transition-colors">
                         {phone}
                       </a>
                     ))}
                   </div>
                 </div>
+                {operator.website && (
+                  <div className="pt-1">
+                    <span className="text-slate-400 font-medium">Website: </span>
+                    <a href={`https://${operator.website}`} target="_blank" rel="noreferrer" className="text-sky-600 font-bold underline">
+                      {operator.website}
+                    </a>
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-1 bg-slate-100 p-1 rounded-xl text-[11px] font-bold">
@@ -442,20 +544,52 @@
     }
 
     function App() {
-      const operators = OPERATORS_DATA;
-      const supplyFerries = SUPPLY_FERRIES_DATA;
-
+      const [operators, setOperators] = useState(INITIAL_FERRY_OPERATORS);
       const [selectedOperator, setSelectedOperator] = useState(null);
       const [selectedSupplyFerry, setSelectedSupplyFerry] = useState(null);
       const [activeRoute, setActiveRoute] = useState('MALE_TO_THULUSDHOO');
       const [now, setNow] = useState(new Date());
 
       const [weather, setWeather] = useState({
-        temp: '28',
-        condition: 'Partly Cloudy',
+        temp: '--',
+        condition: 'Loading...',
         isBadWeather: false,
         type: 'cloudy'
       });
+
+      // --- LIVE VESSEL STATUS CHECKER ---
+      const refreshVesselStatuses = useCallback(async () => {
+        const updatedOperators = await Promise.all(
+          operators.map(async (op) => {
+            if (!op.vessels || op.vessels.length === 0) return op;
+
+            let activeFound = false;
+            const updatedVessels = await Promise.all(
+              op.vessels.map(async (vessel) => {
+                const isOnline = await checkFollowMeStatus(vessel.trackingUrl);
+                // First vessel detected online becomes active
+                const isActive = isOnline && !activeFound;
+                if (isActive) activeFound = true;
+                return { ...vessel, isActive, status: isOnline ? 'online' : 'offline' };
+              })
+            );
+
+            // Fallback: If no vessel is actively returning online status, keep first vessel ready
+            if (!activeFound && updatedVessels.length > 0) {
+              updatedVessels[0].isActive = true;
+            }
+
+            return { ...op, vessels: updatedVessels };
+          })
+        );
+        setOperators(updatedOperators);
+      }, []);
+
+      useEffect(() => {
+        refreshVesselStatuses();
+        const trackerTimer = setInterval(refreshVesselStatuses, 45000); // Check every 45s
+        return () => clearInterval(trackerTimer);
+      }, []);
 
       useEffect(() => {
         const timer = setInterval(() => setNow(new Date()), 1000);
@@ -476,6 +610,7 @@
             }
           } catch (error) {
             console.error('Weather fetch error:', error);
+            setWeather({ temp: '--', condition: 'Unavailable', isBadWeather: false, type: 'cloudy' });
           }
         };
 
@@ -499,10 +634,10 @@
         day: 'numeric'
       });
 
-      const buildScheduleForDay = useCallback((isFriday, isTomorrow = false) => {
+      const buildScheduleForDay = (isFriday, isTomorrow = false) => {
         let trips = [];
         operators.forEach((operator) => {
-          const scheduleList = isFriday ? (operator.fridaySchedule || []) : (operator.regularSchedule || []);
+          const scheduleList = isFriday ? operator.fridaySchedule : operator.regularSchedule;
           scheduleList.forEach((trip) => {
             trips.push({
               ...trip,
@@ -515,17 +650,17 @@
         });
 
         const filtered = trips.filter((t) => t.route === activeRoute);
-        return filtered.sort((a, b) => (a.time24 || '').localeCompare(b.time24 || ''));
-      }, [operators, activeRoute]);
+        return filtered.sort((a, b) => a.time24.localeCompare(b.time24));
+      };
 
-      const todaysDailySchedule = useMemo(() => buildScheduleForDay(isFridayToday, false), [buildScheduleForDay, isFridayToday]);
-      const tomorrowsDailySchedule = useMemo(() => buildScheduleForDay(isFridayTomorrow, true), [buildScheduleForDay, isFridayTomorrow]);
+      const todaysDailySchedule = useMemo(() => buildScheduleForDay(isFridayToday, false), [activeRoute, isFridayToday, operators]);
+      const tomorrowsDailySchedule = useMemo(() => buildScheduleForDay(isFridayTomorrow, true), [activeRoute, isFridayTomorrow, operators]);
 
       const processedTodaySchedule = useMemo(() => {
         const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
         return todaysDailySchedule.map((item) => {
-          const [hours, minutes] = (item.time24 || '00:00').split(':').map(Number);
+          const [hours, minutes] = item.time24.split(':').map(Number);
           const itemMinutes = hours * 60 + minutes;
 
           if (itemMinutes < currentMinutes) {
@@ -583,8 +718,11 @@
 
       return (
         <div className="min-h-screen flex justify-center py-0 sm:py-6 px-0 sm:px-4">
+          
+          {/* Main App Container */}
           <div className="relative w-full max-w-md bg-white/90 sm:rounded-3xl shadow-xl overflow-hidden flex flex-col min-h-screen sm:min-h-0 backdrop-blur-sm z-0">
             
+            {/* Header Section */}
             <div 
               className="relative text-white p-6 overflow-hidden bg-cover bg-center z-10"
               style={{ backgroundImage: "url('https://raw.githubusercontent.com/feyzhub/FerryNow-Thulusdhoo/main/V1.png')" }}
@@ -606,6 +744,7 @@
                 </div>
               </div>
 
+              {/* Weather Status Bar */}
               <div className="relative z-20 mt-4 flex items-center justify-between pt-3 border-t border-white/10 text-xs text-slate-200 drop-shadow-sm">
                 <div className="flex items-center gap-2">
                   <span className="text-base font-bold text-white">{weather.temp}°C</span>
@@ -620,25 +759,26 @@
               </div>
             </div>
 
+            {/* Main Content Area */}
             <div className="p-4 sm:p-5 flex-1 space-y-4 relative z-10 pb-40">
               
-              {operators.length > 0 && (
-                <div className="bg-slate-100/90 p-1.5 rounded-2xl backdrop-blur-sm border border-slate-200/60">
-                  <div className="flex items-center justify-between gap-1 overflow-x-auto no-scrollbar">
-                    {operators.map((op) => (
-                      <button
-                        key={op.id}
-                        onClick={() => setSelectedOperator(op)}
-                        className="flex-1 min-w-fit px-2.5 py-1.5 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition-all text-xs font-bold text-slate-800"
-                      >
-                        <span className={`w-2 h-2 rounded-full ${op.dotColor || 'bg-sky-500'} shrink-0`}></span>
-                        <span className="truncate whitespace-nowrap text-[11px]">{op.shortName || op.name}</span>
-                      </button>
-                    ))}
-                  </div>
+              {/* COMPACT SINGLE-ROW OPERATOR BAR */}
+              <div className="bg-slate-100/90 p-1.5 rounded-2xl backdrop-blur-sm border border-slate-200/60">
+                <div className="flex items-center justify-between gap-1 overflow-x-auto no-scrollbar">
+                  {operators.map((op) => (
+                    <button
+                      key={op.id}
+                      onClick={() => setSelectedOperator(op)}
+                      className="flex-1 min-w-fit px-2.5 py-1.5 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition-all text-xs font-bold text-slate-800"
+                    >
+                      <span className={`w-2 h-2 rounded-full ${op.dotColor} shrink-0`}></span>
+                      <span className="truncate whitespace-nowrap text-[11px]">{op.shortName}</span>
+                    </button>
+                  ))}
                 </div>
-              )}
+              </div>
 
+              {/* Route Selector Tab */}
               <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-100/80 rounded-2xl backdrop-blur-sm">
                 <button
                   onClick={() => setActiveRoute('MALE_TO_THULUSDHOO')}
@@ -662,6 +802,7 @@
                 </button>
               </div>
 
+              {/* Next Ferry Alert Banner */}
               {nextAvailableFerry && (
                 <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent border border-emerald-500/20 flex items-center justify-between backdrop-blur-sm">
                   <div className="flex items-center gap-3">
@@ -680,6 +821,7 @@
                 </div>
               )}
 
+              {/* Daily Schedule List */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between px-1">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Today's Schedule</span>
@@ -734,34 +876,35 @@
                 </div>
               </div>
 
-              {supplyFerries.length > 0 && (
-                <div className="pt-1">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-2 px-1">Cargo & Supply Vessels</span>
-                  <div className="grid grid-cols-2 gap-2">
-                    {supplyFerries.map((supply) => (
-                      <button
-                        key={supply.id}
-                        onClick={() => setSelectedSupplyFerry(supply)}
-                        className="p-3 bg-amber-50/70 hover:bg-amber-100/70 border border-amber-200/60 rounded-2xl text-left transition-colors backdrop-blur-sm"
-                      >
-                        <span className="text-[9px] uppercase font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full inline-block mb-1">
-                          {supply.tag}
-                        </span>
-                        <span className="text-xs font-black text-slate-900 block">{supply.name}</span>
-                        <span className="text-[10px] text-slate-500 font-medium block mt-0.5">Tap for details ↗</span>
-                      </button>
-                    ))}
-                  </div>
+              {/* Cargo & Supply Ferries */}
+              <div className="pt-1">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-2 px-1">Cargo & Supply Vessels</span>
+                <div className="grid grid-cols-2 gap-2">
+                  {SUPPLY_FERRIES.map((supply) => (
+                    <button
+                      key={supply.id}
+                      onClick={() => setSelectedSupplyFerry(supply)}
+                      className="p-3 bg-amber-50/70 hover:bg-amber-100/70 border border-amber-200/60 rounded-2xl text-left transition-colors backdrop-blur-sm"
+                    >
+                      <span className="text-[9px] uppercase font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full inline-block mb-1">
+                        {supply.tag}
+                      </span>
+                      <span className="text-xs font-black text-slate-900 block">{supply.name}</span>
+                      <span className="text-[10px] text-slate-500 font-medium block mt-0.5">Tap for details ↗</span>
+                    </button>
+                  ))}
                 </div>
-              )}
+              </div>
 
             </div>
 
+            {/* Bottom Background Image Inside App with Fade to Top */}
             <div 
               className="absolute bottom-0 left-0 right-0 h-48 bg-cover bg-bottom bg-no-repeat pointer-events-none z-0 fade-to-top-mask opacity-80"
               style={{ backgroundImage: "url('https://raw.githubusercontent.com/feyzhub/FerryNow-Thulusdhoo/main/back_btm.png')" }}
             ></div>
 
+            {/* Modals */}
             {selectedOperator && (
               <ScheduleModal
                 operator={selectedOperator}
