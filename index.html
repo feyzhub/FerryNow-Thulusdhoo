@@ -364,8 +364,11 @@
 
     function App() {
       // Direct load from window object with fallback
-      const getInitialOperators = () => window.INITIAL_FERRY_OPERATORS || [];
-      const getInitialSupply = () => window.SUPPLY_FERRIES || [];
+      const getInitialOperators = () => 
+  (typeof INITIAL_FERRY_OPERATORS !== 'undefined' ? INITIAL_FERRY_OPERATORS : window.INITIAL_FERRY_OPERATORS) || [];
+
+const getInitialSupply = () => 
+  (typeof SUPPLY_FERRIES !== 'undefined' ? SUPPLY_FERRIES : window.SUPPLY_FERRIES) || [];
 
       const [operators, setOperators] = useState(getInitialOperators);
       const [supplyFerries, setSupplyFerries] = useState(getInitialSupply);
