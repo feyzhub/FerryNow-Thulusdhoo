@@ -1,3 +1,5 @@
+window.INITIAL_FERRY_OPERATORS = INITIAL_FERRY_OPERATORS;
+window.SUPPLY_FERRIES = SUPPLY_FERRIES;
 window.OPERATORS_DATA = [
   {
     id: 'tharika-express',
