@@ -18,7 +18,6 @@
   <!-- External Schedules Data File -->
   <script src="./schedulesData.js"></script>
 
-  <!-- Custom CSS for Weather Animations & Fade Mask -->
   <style>
     @keyframes rain {
       0% { transform: translateY(-100%) translateX(0); opacity: 0; }
@@ -38,13 +37,11 @@
     .animate-cloud { animation: cloudDrift 16s ease-in-out infinite; }
     .animate-sun { animation: sunGlow 4s ease-in-out infinite; }
 
-    /* Smooth top fade for bottom image */
     .fade-to-top-mask {
       mask-image: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 50%, rgba(0,0,0,0) 100%);
       -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 50%, rgba(0,0,0,0) 100%);
     }
 
-    /* Hide Scrollbar for clean Operator Bar */
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
@@ -55,32 +52,6 @@
 
   <script type="text/babel">
     const { useState, useEffect, useMemo, useCallback } = React;
-
-    // Pull from external schedulesData.js or fallback to empty arrays
-    const INITIAL_OPERATORS = window.INITIAL_FERRY_OPERATORS || [];
-    const SUPPLY_FERRIES_DATA = window.SUPPLY_FERRIES || [];
-
-    // Helper: Check FollowMe status using CORS proxy scraper
-    async function checkFollowMeStatus(trackingUrl) {
-      if (!trackingUrl || !trackingUrl.includes('followme.mv')) return false;
-      try {
-        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(trackingUrl)}`;
-        const response = await fetch(proxyUrl);
-        if (!response.ok) return false;
-        const data = await response.json();
-        const html = data.contents || "";
-        
-        const isOnline = html.includes('#00FF00') || 
-                         html.includes('#00ff00') || 
-                         html.toLowerCase().includes('status: online') || 
-                         html.toLowerCase().includes('tracking online') || 
-                         html.toLowerCase().includes('active');
-        return isOnline;
-      } catch (err) {
-        console.warn('FollowMe proxy check failed for', trackingUrl, err);
-        return false;
-      }
-    }
 
     const decodeWeatherCode = (code) => {
       switch (code) {
@@ -191,7 +162,7 @@
                 <span className="text-slate-400 block text-[10px] uppercase font-bold mb-2">Operating Days</span>
                 <div className="flex flex-wrap gap-1.5">
                   {["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((day) => {
-                    const isActive = ferry.days.includes(day);
+                    const isActive = ferry.days?.includes(day);
                     return (
                       <span
                         key={day}
@@ -230,7 +201,7 @@
               <div className="space-y-2 bg-slate-50 p-3.5 rounded-2xl border border-slate-100 text-xs">
                 <span className="text-slate-400 block text-[10px] uppercase font-bold mb-1">Contact Numbers</span>
                 <div className="flex flex-wrap gap-2">
-                  {ferry.contacts.map((phone, i) => (
+                  {ferry.contacts?.map((phone, i) => (
                     <a key={i} href={`tel:${phone}`} className="font-bold text-slate-800 bg-white px-3 py-1.5 rounded-xl border border-slate-200 hover:border-amber-500 transition-colors shadow-sm">
                       📞 {phone}
                     </a>
@@ -255,8 +226,7 @@
     function ScheduleModal({ operator, isFriday, onClose }) {
       if (!operator) return null;
       const [filterRoute, setFilterRoute] = useState('ALL');
-      const rawSchedule = isFriday ? operator.fridaySchedule : operator.regularSchedule;
-      
+      const rawSchedule = isFriday ? (operator.fridaySchedule || []) : (operator.regularSchedule || []);
       const activeVessel = operator.vessels?.find(v => v.isActive) || operator.vessels?.[0];
 
       const modalSchedule = useMemo(() => {
@@ -322,7 +292,7 @@
                 <div>
                   <span className="text-slate-400 block text-[10px] uppercase font-bold mb-1">Hotline Contacts</span>
                   <div className="flex gap-2">
-                    {operator.booking.map((phone, i) => (
+                    {operator.booking?.map((phone, i) => (
                       <a key={i} href={`tel:${phone}`} className="font-bold text-slate-800 bg-white px-3 py-1 rounded-lg border border-slate-200 hover:border-sky-500 transition-colors">
                         {phone}
                       </a>
@@ -393,48 +363,32 @@
     }
 
     function App() {
-      const [operators, setOperators] = useState(INITIAL_OPERATORS);
+      // Direct load from window object with fallback
+      const getInitialOperators = () => window.INITIAL_FERRY_OPERATORS || [];
+      const getInitialSupply = () => window.SUPPLY_FERRIES || [];
+
+      const [operators, setOperators] = useState(getInitialOperators);
+      const [supplyFerries, setSupplyFerries] = useState(getInitialSupply);
       const [selectedOperator, setSelectedOperator] = useState(null);
       const [selectedSupplyFerry, setSelectedSupplyFerry] = useState(null);
       const [activeRoute, setActiveRoute] = useState('MALE_TO_THULUSDHOO');
       const [now, setNow] = useState(new Date());
 
       const [weather, setWeather] = useState({
-        temp: '--',
-        condition: 'Loading...',
+        temp: '28',
+        condition: 'Partly Cloudy',
         isBadWeather: false,
         type: 'cloudy'
       });
 
-      const refreshVesselStatuses = useCallback(async () => {
-        const updatedOperators = await Promise.all(
-          operators.map(async (op) => {
-            if (!op.vessels || op.vessels.length === 0) return op;
-
-            let activeFound = false;
-            const updatedVessels = await Promise.all(
-              op.vessels.map(async (vessel) => {
-                const isOnline = await checkFollowMeStatus(vessel.trackingUrl);
-                const isActive = isOnline && !activeFound;
-                if (isActive) activeFound = true;
-                return { ...vessel, isActive, status: isOnline ? 'online' : 'offline' };
-              })
-            );
-
-            if (!activeFound && updatedVessels.length > 0) {
-              updatedVessels[0].isActive = true;
-            }
-
-            return { ...op, vessels: updatedVessels };
-          })
-        );
-        setOperators(updatedOperators);
-      }, []);
-
+      // Sync window data if script loaded slightly after initial render
       useEffect(() => {
-        refreshVesselStatuses();
-        const trackerTimer = setInterval(refreshVesselStatuses, 45000);
-        return () => clearInterval(trackerTimer);
+        if (operators.length === 0 && window.INITIAL_FERRY_OPERATORS) {
+          setOperators(window.INITIAL_FERRY_OPERATORS);
+        }
+        if (supplyFerries.length === 0 && window.SUPPLY_FERRIES) {
+          setSupplyFerries(window.SUPPLY_FERRIES);
+        }
       }, []);
 
       useEffect(() => {
@@ -456,7 +410,6 @@
             }
           } catch (error) {
             console.error('Weather fetch error:', error);
-            setWeather({ temp: '--', condition: 'Unavailable', isBadWeather: false, type: 'cloudy' });
           }
         };
 
@@ -480,10 +433,10 @@
         day: 'numeric'
       });
 
-      const buildScheduleForDay = (isFriday, isTomorrow = false) => {
+      const buildScheduleForDay = useCallback((isFriday, isTomorrow = false) => {
         let trips = [];
         operators.forEach((operator) => {
-          const scheduleList = isFriday ? operator.fridaySchedule : operator.regularSchedule;
+          const scheduleList = isFriday ? (operator.fridaySchedule || []) : (operator.regularSchedule || []);
           scheduleList.forEach((trip) => {
             trips.push({
               ...trip,
@@ -496,17 +449,17 @@
         });
 
         const filtered = trips.filter((t) => t.route === activeRoute);
-        return filtered.sort((a, b) => a.time24.localeCompare(b.time24));
-      };
+        return filtered.sort((a, b) => (a.time24 || '').localeCompare(b.time24 || ''));
+      }, [operators, activeRoute]);
 
-      const todaysDailySchedule = useMemo(() => buildScheduleForDay(isFridayToday, false), [activeRoute, isFridayToday, operators]);
-      const tomorrowsDailySchedule = useMemo(() => buildScheduleForDay(isFridayTomorrow, true), [activeRoute, isFridayTomorrow, operators]);
+      const todaysDailySchedule = useMemo(() => buildScheduleForDay(isFridayToday, false), [buildScheduleForDay, isFridayToday]);
+      const tomorrowsDailySchedule = useMemo(() => buildScheduleForDay(isFridayTomorrow, true), [buildScheduleForDay, isFridayTomorrow]);
 
       const processedTodaySchedule = useMemo(() => {
         const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
         return todaysDailySchedule.map((item) => {
-          const [hours, minutes] = item.time24.split(':').map(Number);
+          const [hours, minutes] = (item.time24 || '00:00').split(':').map(Number);
           const itemMinutes = hours * 60 + minutes;
 
           if (itemMinutes < currentMinutes) {
@@ -603,20 +556,22 @@
 
             <div className="p-4 sm:p-5 flex-1 space-y-4 relative z-10 pb-40">
               
-              <div className="bg-slate-100/90 p-1.5 rounded-2xl backdrop-blur-sm border border-slate-200/60">
-                <div className="flex items-center justify-between gap-1 overflow-x-auto no-scrollbar">
-                  {operators.map((op) => (
-                    <button
-                      key={op.id}
-                      onClick={() => setSelectedOperator(op)}
-                      className="flex-1 min-w-fit px-2.5 py-1.5 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition-all text-xs font-bold text-slate-800"
-                    >
-                      <span className={`w-2 h-2 rounded-full ${op.dotColor} shrink-0`}></span>
-                      <span className="truncate whitespace-nowrap text-[11px]">{op.shortName}</span>
-                    </button>
-                  ))}
+              {operators.length > 0 && (
+                <div className="bg-slate-100/90 p-1.5 rounded-2xl backdrop-blur-sm border border-slate-200/60">
+                  <div className="flex items-center justify-between gap-1 overflow-x-auto no-scrollbar">
+                    {operators.map((op) => (
+                      <button
+                        key={op.id}
+                        onClick={() => setSelectedOperator(op)}
+                        className="flex-1 min-w-fit px-2.5 py-1.5 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition-all text-xs font-bold text-slate-800"
+                      >
+                        <span className={`w-2 h-2 rounded-full ${op.dotColor || 'bg-sky-500'} shrink-0`}></span>
+                        <span className="truncate whitespace-nowrap text-[11px]">{op.shortName || op.name}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-100/80 rounded-2xl backdrop-blur-sm">
                 <button
@@ -713,24 +668,26 @@
                 </div>
               </div>
 
-              <div className="pt-1">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-2 px-1">Cargo & Supply Vessels</span>
-                <div className="grid grid-cols-2 gap-2">
-                  {SUPPLY_FERRIES_DATA.map((supply) => (
-                    <button
-                      key={supply.id}
-                      onClick={() => setSelectedSupplyFerry(supply)}
-                      className="p-3 bg-amber-50/70 hover:bg-amber-100/70 border border-amber-200/60 rounded-2xl text-left transition-colors backdrop-blur-sm"
-                    >
-                      <span className="text-[9px] uppercase font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full inline-block mb-1">
-                        {supply.tag}
-                      </span>
-                      <span className="text-xs font-black text-slate-900 block">{supply.name}</span>
-                      <span className="text-[10px] text-slate-500 font-medium block mt-0.5">Tap for details ↗</span>
-                    </button>
-                  ))}
+              {supplyFerries.length > 0 && (
+                <div className="pt-1">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-2 px-1">Cargo & Supply Vessels</span>
+                  <div className="grid grid-cols-2 gap-2">
+                    {supplyFerries.map((supply) => (
+                      <button
+                        key={supply.id}
+                        onClick={() => setSelectedSupplyFerry(supply)}
+                        className="p-3 bg-amber-50/70 hover:bg-amber-100/70 border border-amber-200/60 rounded-2xl text-left transition-colors backdrop-blur-sm"
+                      >
+                        <span className="text-[9px] uppercase font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full inline-block mb-1">
+                          {supply.tag}
+                        </span>
+                        <span className="text-xs font-black text-slate-900 block">{supply.name}</span>
+                        <span className="text-[10px] text-slate-500 font-medium block mt-0.5">Tap for details ↗</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
             </div>
 
