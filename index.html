@@ -50,7 +50,7 @@ const OPERATORS = window.FERRY_OPERATORS_V2;;
 const SUPPLY = window.FERRY_SUPPLY_V2;;
 let activeRoute='MALE_TO_THULUSDHOO', selectedOperator=null, selectedSupply=null, lastWeatherCode=null;
 const $=id=>document.getElementById(id);const isFriday= d=>d.getDay()===5;const dayName=d=>d.toLocaleDateString('en-MV',{weekday:'long'});
-function timeMinutes(t){const [h,m]=t.split(':').map(Number);return h*60+m}function fmtTime(t){const [h,m]=t.split(':').map(Number);return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`}function safe(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function timeMinutes(t){const [h,m]=t.split(':').map(Number);return h*60+m}function fmtTime(t){const [h,m]=t.split(':').map(Number);return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`}:${String(m).padStart(2,'0')}`}function safe(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function getTrips(route,day){const list=[];const friday=isFriday(day);for(const op of OPERATORS){const source=friday?op.friday:op.regular;for(const [time,r] of source){if(r===route)list.push({time,route:r,op,minutes:timeMinutes(time)});}}return list.sort((a,b)=>a.minutes-b.minutes||a.op.name.localeCompare(b.op.name));}
 function makeNextData(now){const mins=now.getHours()*60+now.getMinutes();let day=new Date(now);let trips=getTrips(activeRoute,day);let future=trips.filter(t=>t.minutes>=mins);let tomorrow=false;if(!future.length){day.setDate(day.getDate()+1);trips=getTrips(activeRoute,day);future=trips;tomorrow=true;}return {day,trips,future,tomorrow,mins};}
 function render(){const now=new Date();$('clock').textContent=`${dayName(now)} · ${now.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit',hourCycle:'h23'})}`;$('route-male').classList.toggle('active',activeRoute==='MALE_TO_THULUSDHOO');$('route-thulus').classList.toggle('active',activeRoute==='THULUSDHOO_TO_MALE');$('route-planner').classList.remove('active');const data=makeNextData(now);const first=data.future[0];const diff=first?first.minutes-data.mins:0;const grouped=first?data.future.filter(t=>t.minutes===first.minutes):[];$('next-label').textContent=data.tomorrow?'Next departure · Tomorrow':'Next available departure';$('next-time').innerHTML=first?fmtTime(first.time):'No service';$('next-meta').innerHTML=first?`${data.tomorrow?'Tomorrow · ':''}<strong>${ROUTES[activeRoute].from}</strong> to <strong>${ROUTES[activeRoute].to}</strong>`:'No scheduled departures found for this route.';$('countdown').textContent=data.tomorrow?'First departures tomorrow':diff===0?'Departure time now':diff<60?`In ${diff} min`:`In ${Math.floor(diff/60)}h ${diff%60}m`;$('next-operators').innerHTML=grouped.map(t=>`<button class="operator-chip" onclick="openOperator('${t.op.id}')"><i class="dot" style="background:${t.op.color}"></i>${safe(t.op.short)}</button>`).join('');$('schedule-day').textContent=data.tomorrow?`Tomorrow · ${dayName(data.day)}`:isFriday(now)?'Friday schedule':'Today';$('schedule-subtitle').textContent=`${ROUTES[activeRoute].label} · Maldives local time`;
@@ -61,24 +61,64 @@ function renderOperators(){$('operator-grid').innerHTML=OPERATORS.map(op=>`<butt
 function setRoute(route){activeRoute=route;render();}function scrollToSchedule(){$('schedule-panel').scrollIntoView({behavior:'smooth',block:'start'});}
 function openOperator(id){selectedOperator=OPERATORS.find(o=>o.id===id);if(!selectedOperator)return;const op=selectedOperator;const regular=op.regular.map(([time,route])=>({time,route})).sort((a,b)=>a.time.localeCompare(b.time));const friday=op.friday.map(([time,route])=>({time,route})).sort((a,b)=>a.time.localeCompare(b.time));const schedule=(isFriday(new Date())?friday:regular);$('modal-root').innerHTML=`<div class="modal-backdrop" onclick="backdropClose(event)"><section class="modal" role="dialog" aria-modal="true" aria-label="${safe(op.name)} details"><header class="modal-head"><div><div class="modal-tag">${safe(op.tag)}</div><h2>${safe(op.name)}</h2><p>${safe(op.description)}</p></div><button class="close-btn" aria-label="Close" onclick="closeModal()">×</button></header><div class="modal-body"><section class="modal-section"><h4>Fares</h4><div class="modal-fares"><div class="fare-box"><span>One way</span><strong>${safe(op.fareOneWay)}</strong></div><div class="fare-box"><span>Round trip</span><strong>${safe(op.fareRoundTrip)}</strong></div></div></section><section class="modal-section"><h4>Call operator</h4><div class="contact-row">${op.booking.map(n=>`<a class="action-link primary" href="tel:${safe(n)}">☎ ${safe(n)}</a>`).join('')}${op.email?`<a class="action-link" href="mailto:${safe(op.email)}">✉ Email</a>`:''}${op.website?`<a class="action-link" href="${safe(op.website)}" target="_blank" rel="noopener noreferrer">Website ↗</a>`:''}</div></section><section class="modal-section"><h4>Vessel tracking & service links</h4><div class="tracker-row">${op.vessels.map(v=>`<a class="tracker-link" href="${safe(v.url)}" target="_blank" rel="noopener noreferrer"><span><strong>${safe(v.name)}</strong><small>Open tracking / service page</small></span><b>View ↗</b></a>`).join('')}</div><div class="status-note">Tracking opens the provider page. FerryNow cannot verify live status from this page alone, so it does not display an unverified green/live indicator.</div></section><section class="modal-section"><h4>${isFriday(new Date())?'Friday':'Regular'} timetable</h4><div class="table-list">${schedule.length?schedule.map(s=>`<div class="table-row"><strong>${fmtTime(s.time)}</strong><span>${ROUTES[s.route].from} → ${ROUTES[s.route].to}</span></div>`).join(''):'<div class="empty">No Friday departures are listed in the current source data. Please confirm with RTL/operator.</div>'}</div></section></div></section></div>`;document.body.style.overflow='hidden';}
 
+
 function openPlanner(){
- const dayFriday=isFriday(new Date());
- const dayLabel=dayFriday?'Friday':'Saturday–Thursday';
- const currentRoute=activeRoute || 'MALE_TO_THULUSDHOO';
- const selectedDay=dayFriday?'friday':'regular';
- const makeTrips=()=>OPERATORS.flatMap(op=>(op[selectedDay]||[]).filter(x=>x[1]===currentRoute).map(([time,route])=>({time,route,op}))).sort((a,b)=>a.time.localeCompare(b.time));
- const trips=makeTrips();
- const renderTrips=()=>{
-  const route=$('planner-route').value, day=$('planner-day').value;
-  const list=OPERATORS.flatMap(op=>(op[day]||[]).filter(x=>x[1]===route).map(([time,r])=>({time,route:r,op}))).sort((a,b)=>a.time.localeCompare(b.time));
-  $('planner-list').innerHTML=list.length?list.map((t,i)=>{
-   const gap=i?timeMinutes(t.time)-timeMinutes(list[i-1].time):null;
-   const gapMarkup=i?`<div class="planner-gap">${gap===0?'Same departure time':`${gap} min after ${list[i-1].time}`}</div>`:'';
-   return `${gapMarkup}<div class="planner-trip"><strong>${t.time}</strong><div><div style="font-weight:850">${safe(t.op.name)}</div><div style="font-size:11px;color:var(--muted)">${safe(ROUTES[t.route].from)} → ${safe(ROUTES[t.route].to)}</div><div class="planner-phone">${t.op.booking.map(n=>`<a href="tel:${safe(n)}">☎ ${safe(n)}</a>`).join('')}</div></div><button onclick="openOperator('${t.op.id}')">Details</button></div>`;
-  }).join(''):'<div class="empty">No departures listed for this day and direction.</div>';
+ window.ferryPlannerSelected=[];
+ const friday=isFriday(new Date());
+ const defaultDay=friday?'friday':'regular';
+ $('modal-root').innerHTML=`<div class="modal-backdrop" onclick="backdropClose(event)"><section class="modal" role="dialog" aria-modal="true" aria-label="Full timetable trip planner"><header class="modal-head"><div><div class="modal-tag">Plan your trip</div><h2>Full Timetable</h2><p>Both directions, sorted by departure time</p></div><button class="close-btn" onclick="closeModal()" aria-label="Close">×</button></header><section class="modal-section"><div class="planner-controls"><select id="planner-day" aria-label="Travel day"><option value="regular" ${defaultDay==='regular'?'selected':''}>Saturday–Thursday</option><option value="friday" ${defaultDay==='friday'?'selected':''}>Friday</option></select><input id="planner-search" placeholder="Search operator or time" style="width:100%;padding:11px;border:1px solid var(--line);border-radius:12px;font:inherit;font-size:12px" aria-label="Search timetable"/></div><p class="info-note">Select one ferry in each direction. Departures are shown together in time order.</p></section><section class="modal-section"><div id="planner-list" class="table-list"></div></section><section class="modal-section"><h3 style="margin:0 0 10px">Your trip</h3><div id="planner-summary" class="planner-summary"></div></section></section></div>`;
+ const render=()=>{
+  const day=$('planner-day').value, search=$('planner-search').value.trim().toLowerCase();
+  const all=OPERATORS.flatMap(op=>(op[day]||[]).map(([time,route])=>({time,route,op})))
+    .filter(t=>t.route==='MALE_TO_THULUSDHOO'||t.route==='THULUSDHOO_TO_MALE')
+    .sort((a,b)=>a.time.localeCompare(b.time)||a.op.name.localeCompare(b.op.name));
+  const selectedIds=window.ferryPlannerSelected||[];
+  const filtered=all.filter(t=>(t.op.name+' '+t.time+' '+ROUTES[t.route].from+' '+ROUTES[t.route].to).toLowerCase().includes(search));
+  $('planner-list').innerHTML=filtered.length?filtered.map((t,i)=>{
+   const key=t.op.id+'|'+t.time+'|'+t.route;
+   const chosen=selectedIds.includes(key);
+   const previous=filtered[i-1];
+   const gap=previous?timeMinutes(t.time)-timeMinutes(previous.time):null;
+   const gapMarkup=previous?`<div class="planner-gap">${gap===0?'Same departure time':`${gap} min after ${previous.time}`}</div>`:'';
+   return `${gapMarkup}<div class="planner-trip ${chosen?'planner-selected':''}"><strong class="planner-time">${t.time}</strong><div class="planner-trip-main"><div class="planner-trip-operator">${safe(t.op.name)}</div><div class="planner-trip-direction">${safe(ROUTES[t.route].from)} → ${safe(ROUTES[t.route].to)}</div><div class="planner-phone">${(t.op.booking||[]).map(n=>`<a href="tel:${safe(n)}">☎ ${safe(n)}</a>`).join('')}</div></div><button onclick="togglePlannerSelection('${safe(key)}')">${chosen?'Selected ✓':'Select ferry'}</button></div>`;
+  }).join(''):'<div class="empty">No departures match this selection.</div>';
+  const selected=(window.ferryPlannerSelected||[]).map(key=>{
+   const [id,time,route]=key.split('|');
+   return all.find(t=>t.op.id===id&&t.time===time&&t.route===route);
+  }).filter(Boolean);
+  const outbound=selected.find(t=>t.route==='THULUSDHOO_TO_MALE');
+  const inbound=selected.find(t=>t.route==='MALE_TO_THULUSDHOO');
+  const summary=$('planner-summary');
+  if(!selected.length){summary.innerHTML='<p class="info-note">Choose a Thulusdhoo → Malé ferry and a Malé → Thulusdhoo ferry to compare them.</p>';}
+  else {
+   const row=t=>`<div class="planner-summary-row"><div><strong>${t.time}</strong> · ${safe(t.op.name)}<div class="planner-trip-direction">${safe(ROUTES[t.route].from)} → ${safe(ROUTES[t.route].to)}</div></div><div class="planner-phone">${(t.op.booking||[]).map(n=>`<a href="tel:${safe(n)}">☎ ${safe(n)}</a>`).join('')}</div></div>`;
+   let gapText='Select one ferry in each direction to calculate the time between departures.';
+   if(outbound&&inbound){
+    const a=timeMinutes(outbound.time),b=timeMinutes(inbound.time);
+    let gap=b-a;
+    if(gap<0)gap+=1440;
+    gapText=`Time between departures: ${Math.floor(gap/60)}h ${gap%60}m. This is the departure-time gap, not time available in Malé; select the actual travel days to calculate an overnight gap correctly.`;
+   }
+   summary.innerHTML=selected.map(row).join('')+`<div class="planner-gap-summary">${safe(gapText)}</div>`;
+  }
  };
- $('modal-root').innerHTML=`<div class="modal-backdrop" onclick="backdropClose(event)"><section class="modal" role="dialog" aria-modal="true" aria-label="Full timetable and trip planner"><header class="modal-head"><div><div class="modal-tag">Plan your trip</div><h2>Full Timetable</h2><p>All operators in departure-time order</p></div><button class="close-btn" onclick="closeModal()" aria-label="Close">×</button></header><section class="modal-section"><div class="planner-controls"><select id="planner-route" aria-label="Travel direction"><option value="MALE_TO_THULUSDHOO" ${currentRoute==='MALE_TO_THULUSDHOO'?'selected':''}>Malé → Thulusdhoo</option><option value="THULUSDHOO_TO_MALE" ${currentRoute==='THULUSDHOO_TO_MALE'?'selected':''}>Thulusdhoo → Malé</option></select><select id="planner-day" aria-label="Day"><option value="regular" ${selectedDay==='regular'?'selected':''}>Saturday–Thursday</option><option value="friday" ${selectedDay==='friday'?'selected':''}>Friday</option></select></div></section><section class="modal-section"><div id="planner-list" class="table-list"></div><p class="info-note">Time gaps show the difference between scheduled departures, not travel duration. Tap Details for the selected operator's contact numbers and links.</p></section></section></div>`;
- $('planner-route').addEventListener('change',renderTrips);$('planner-day').addEventListener('change',renderTrips);renderTrips();document.body.style.overflow='hidden';
+ window.togglePlannerSelection=(key)=>{
+  let chosen=window.ferryPlannerSelected||[];
+  if(chosen.includes(key)) chosen=chosen.filter(x=>x!==key);
+  else {
+   const [id,time,route]=key.split('|');
+   const opposite=route==='THULUSDHOO_TO_MALE'?'MALE_TO_THULUSDHOO':'THULUSDHOO_TO_MALE';
+   chosen=chosen.filter(x=>x.split('|')[2]!==route);
+   if(chosen.length<2) chosen.push(key);
+   else chosen=[chosen[1],key];
+  }
+  window.ferryPlannerSelected=chosen.slice(-2);
+  render();
+ };
+ $('planner-day').addEventListener('change',render);
+ $('planner-search').addEventListener('input',render);
+ render();
+ document.body.style.overflow='hidden';
 }
 
 function openSupply(id){const f=SUPPLY.find(x=>x.id===id);if(!f)return;const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];$('modal-root').innerHTML=`<div class="modal-backdrop" onclick="backdropClose(event)"><section class="modal" role="dialog" aria-modal="true" aria-label="${safe(f.name)} details"><header class="modal-head"><div><div class="modal-tag">Cargo & supply</div><h2>${safe(f.name)}</h2><p>Supply vessel operating days, times and contact details.</p></div><button class="close-btn" aria-label="Close" onclick="closeModal()">×</button></header><div class="modal-body"><section class="modal-section"><h4>Operating days</h4><div class="day-pills">${days.map(d=>`<span class="day-pill ${f.days.includes(d)?'':'off'}">${d.slice(0,3)}</span>`).join('')}</div></section><section class="modal-section"><h4>Departure times</h4><div class="table-list"><div class="table-row"><span>From Thulusdhoo</span><strong>${fmtTime(f.thulusdhooTime)}</strong></div><div class="table-row"><span>From Malé</span><strong>${fmtTime(f.maleTime)}</strong></div></div></section><section class="modal-section"><h4>Contacts</h4><div class="contact-row">${f.contacts.map(n=>`<a class="action-link primary" href="tel:${safe(n)}">☎ ${safe(n)}</a>`).join('')}</div></section><section class="modal-section"><h4>Vessel tracker</h4><a class="tracker-link" href="${safe(f.url)}" target="_blank" rel="noopener noreferrer"><span><strong>${safe(f.name)}</strong><small>Open FollowMe tracking page</small></span><b>View ↗</b></a><div class="status-note">The tracker page may show the latest vessel information. Live status is not verified by FerryNow.</div></section></div></section></div>`;document.body.style.overflow='hidden';}
