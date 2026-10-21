@@ -1,24 +1,11 @@
 {
-  "name": "Thulusdhoo Ferry Finder",
-  "short_name": "FerryFinder",
-  "description": "Instant next ferry schedule for Thulusdhoo",
+  "name": "FerryNow — Thulusdhoo",
+  "short_name": "FerryNow",
+  "description": "Ferry schedules, fares, weather and vessel tracking links for Thulusdhoo, Maldives.",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#0f172a",
-  "orientation": "portrait",
-  "icons": [
-    {
-      "src": "icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
-  ]
+  "background_color": "#f3f8fb",
+  "theme_color": "#082f49",
+  "orientation": "portrait"
 }
