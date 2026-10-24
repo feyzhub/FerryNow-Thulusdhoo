@@ -20,3 +20,8 @@ The Live Vessels panel checks the public FollowMe GPS API for Refcool Express 1/
 GitHub Pages is static hosting, and FollowMe may block direct browser requests through CORS. Deploy `tracker-proxy.js` as a Cloudflare Worker. Then edit `index.html` and set `TRACKER_PROXY_URL` to the Worker URL (for example, `https://your-worker.your-subdomain.workers.dev/`). Upload the updated `index.html`, `schedules.js`, `manifest.json`, `sw.js`, images, and `tracker-proxy.js` to the repository. The Worker only allows known public tracker IDs and does not expose the device IMEI.
 
 If the Worker is not configured, the panel attempts direct access; if CORS blocks it, the UI reports that setup is required instead of inventing a live status. Moving threshold: at least 3 knots. Below 1 knot is stopped; 1–3 knots is slow. GPS data older than 2 minutes is stale. Nearby-place and ETA calculations are approximate and use straight-line distances.
+
+
+## FollowMe live GPS dots
+
+The live GPS integration is connected to the Cloudflare Worker at `https://ferrynow-tracker.feyrezdgreat.workers.dev`. Operator vessel links remain clickable and display a status dot based on recent GPS data: green means moving (3+ knots), amber means slow (1–2 knots), grey means stopped, and grey/unavailable means the GPS report is stale or could not be fetched. The app refreshes GPS data every 30 seconds. Approximate ETA is straight-line based and is not a guaranteed arrival time.
